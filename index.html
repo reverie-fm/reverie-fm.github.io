@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reverie — Personal Music Rankings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script>
+  // Redirect logged-in users straight to the app — unless they clicked "Home" intentionally
+  try {
+    if (!location.search.includes('home=1')) {
+      const s = JSON.parse(localStorage.getItem('reverie_session_v1'));
+      if (s && s.userId && s.username) location.replace('app.html');
+    }
+  } catch(e) {}
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+/* ── Page fade-in ── */
+#page-fade{position:fixed;inset:0;background:var(--bg,#08080a);z-index:9999;pointer-events:none;transition:opacity .35s ease}
+#page-fade.gone{opacity:0}
+
+/* ── Custom scrollbar (matches app) ── */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(200,169,110,.2);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:rgba(200,169,110,.45)}
+*{scrollbar-width:thin;scrollbar-color:rgba(200,169,110,.2) transparent}
+
+:root{
+  --bg:#08080a;--surface:#111114;--surface2:#1a1a1f;
+  --accent:#c8a96e;--accent2:#e8c98a;--text:#f0ede8;--muted:#7a7a72;
+  --border:rgba(200,169,110,.12);--border2:rgba(200,169,110,.28);
+}
+html,body{min-height:100vh;overflow-x:hidden;overflow-y:scroll}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}
+
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:998;opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;padding:.9rem 2.5rem;
+  background:rgba(8,8,10,.78);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--accent2);letter-spacing:-.02em;margin-right:auto}
+.nav-cta{
+  padding:.48rem 1.2rem;background:transparent;
+  border:1px solid var(--border2);border-radius:7px;
+  color:var(--accent);font-weight:600;font-size:.8rem;cursor:pointer;
+  font-family:'DM Sans',sans-serif;text-decoration:none;
+  transition:all .18s;letter-spacing:.02em;
+}
+.nav-cta:hover{background:var(--accent);color:#1a1408;border-color:var(--accent)}
+
+/* ── Hero ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:8rem 2rem 5rem;
+  position:relative;z-index:1;
+}
+
+.hero-disc{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-55%);
+  width:min(700px,95vw);height:min(700px,95vw);border-radius:50%;
+  background:radial-gradient(ellipse at 38% 42%,rgba(200,169,110,.10) 0%,rgba(200,169,110,.04) 35%,transparent 70%);
+  pointer-events:none;
+}
+.vinyl-ring{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-55%) rotate(0deg);
+  width:min(560px,85vw);height:min(560px,85vw);border-radius:50%;
+  border:1px solid rgba(200,169,110,.07);
+  animation:spin 28s linear infinite;pointer-events:none;
+}
+.vinyl-ring::before{content:'';position:absolute;inset:16%;border-radius:50%;border:1px solid rgba(200,169,110,.05)}
+.vinyl-ring::after{content:'';position:absolute;inset:40%;border-radius:50%;background:rgba(200,169,110,.06);border:1px solid rgba(200,169,110,.12)}
+@keyframes spin{to{transform:translate(-50%,-55%) rotate(360deg)}}
+
+.eyebrow{font-family:'DM Mono',monospace;font-size:.67rem;text-transform:uppercase;letter-spacing:.22em;color:var(--accent);margin-bottom:1.75rem;opacity:.65;animation:fadeUp .5s .05s ease both}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(3.5rem,9.5vw,7rem);line-height:1.02;letter-spacing:-.03em;margin-bottom:1.4rem;animation:fadeUp .55s .12s ease both}
+.hero-title .t1{color:var(--text);display:block}
+.hero-title .t2{color:var(--accent2);font-style:italic;display:block}
+.hero-sub{font-size:clamp(.88rem,2vw,1.05rem);color:var(--muted);line-height:1.8;max-width:380px;margin-bottom:2.5rem;animation:fadeUp .55s .2s ease both}
+.hero-actions{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;animation:fadeUp .55s .27s ease both}
+
+.btn-primary{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.85rem 2rem;background:var(--accent);border:none;border-radius:10px;
+  color:#1a1408;font-weight:700;font-size:.9rem;cursor:pointer;
+  font-family:'DM Sans',sans-serif;text-decoration:none;transition:all .2s;
+}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 10px 32px rgba(200,169,110,.22)}
+.btn-primary svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;flex-shrink:0}
+.btn-ghost{
+  display:inline-flex;align-items:center;padding:.85rem 1.75rem;background:transparent;
+  border:1px solid var(--border2);border-radius:10px;
+  color:var(--muted);font-size:.9rem;cursor:pointer;
+  font-family:'DM Sans',sans-serif;text-decoration:none;transition:all .2s;
+}
+.btn-ghost:hover{color:var(--text);border-color:rgba(200,169,110,.45)}
+
+/* Demo cards */
+.demo-cards{display:flex;gap:1rem;justify-content:center;margin-top:3.5rem;flex-wrap:wrap;animation:fadeUp .6s .38s ease both}
+.demo-card{
+  display:flex;align-items:center;gap:.75rem;padding:.6rem 1rem .6rem .75rem;
+  background:linear-gradient(160deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,.018) 100%);
+  border:1px solid rgba(255,255,255,.09);border-radius:12px;
+  backdrop-filter:blur(10px);box-shadow:0 4px 20px rgba(0,0,0,.35);
+  font-size:.8rem;white-space:nowrap;
+}
+.demo-card-art{width:36px;height:36px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.demo-card-info{display:flex;flex-direction:column;gap:.1rem}
+.demo-card-title{font-weight:500;color:var(--text);font-size:.82rem;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.demo-card-artist{color:var(--muted);font-size:.72rem}
+.demo-card-score{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;margin-left:.5rem;flex-shrink:0}
+.gold{color:#e8c98a}.green{color:#5dba7a}.blue{color:#7ab5e0}
+
+/* Marquee */
+.marquee-wrap{overflow:hidden;padding:2rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.marquee-track{display:flex;gap:2.5rem;width:max-content;animation:marquee 22s linear infinite}
+.marquee-item{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);opacity:.35;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;display:flex;align-items:center;gap:.75rem}
+.marquee-item::before{content:'♪';color:var(--accent);opacity:.6}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* Features */
+.features{padding:5rem 2rem 7rem;max-width:900px;margin:0 auto;position:relative;z-index:1}
+.section-divider{display:flex;align-items:center;gap:1.25rem;margin-bottom:3rem}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-label-inner{font-family:'DM Mono',monospace;font-size:.63rem;text-transform:uppercase;letter-spacing:.2em;color:var(--accent);opacity:.55;white-space:nowrap}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.feat{padding:1.75rem;background:var(--surface);transition:background .18s;position:relative;overflow:hidden}
+.feat:hover{background:var(--surface2)}
+.feat-num{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--accent);opacity:.4;margin-bottom:.5rem;letter-spacing:.1em}
+.feat-icon{font-size:1.4rem;margin-bottom:.65rem;display:block}
+.feat-title{font-family:'Playfair Display',serif;font-size:.98rem;color:var(--accent2);margin-bottom:.4rem}
+.feat-desc{font-size:.8rem;color:var(--muted);line-height:1.65}
+
+/* CTA strip */
+.cta-strip{text-align:center;padding:4.5rem 2rem 6rem;position:relative;z-index:1}
+.cta-strip-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);letter-spacing:-.02em;color:var(--text);margin-bottom:1rem;line-height:1.1}
+.cta-strip-title em{color:var(--accent2);font-style:italic}
+.cta-strip-sub{color:var(--muted);font-size:.92rem;max-width:340px;margin:0 auto 2rem;line-height:1.7}
+
+footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);opacity:.25;letter-spacing:.06em;position:relative;z-index:1;border-top:1px solid var(--border)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.feat:nth-child(1){animation:fadeUp .5s .4s ease both}
+.feat:nth-child(2){animation:fadeUp .5s .48s ease both}
+.feat:nth-child(3){animation:fadeUp .5s .56s ease both}
+.feat:nth-child(4){animation:fadeUp .5s .64s ease both}
+.feat:nth-child(5){animation:fadeUp .5s .72s ease both}
+.feat:nth-child(6){animation:fadeUp .5s .80s ease both}
+
+@media(max-width:540px){
+  nav{padding:.75rem 1.25rem}
+  .demo-cards{display:none}
+  .hero-title{font-size:clamp(3rem,14vw,5rem)}
+}
+</style>
+</head>
+<body>
+<div id="page-fade"></div>
+<script>
+  // Fade in once page is ready
+  window.addEventListener('load', function() {
+    requestAnimationFrame(function() {
+      var fade = document.getElementById('page-fade');
+      if (fade) { fade.classList.add('gone'); setTimeout(function(){ fade.style.display='none'; }, 400); }
+    });
+  });
+</script>
+
+<nav>
+  <div class="nav-logo">Reverie</div>
+  <a class="nav-cta" href="app.html">Open App</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-disc"></div>
+  <div class="vinyl-ring"></div>
+
+  <div class="eyebrow">Personal Music Rankings</div>
+  <h1 class="hero-title">
+    <span class="t1">Your music,</span>
+    <span class="t2">ranked.</span>
+  </h1>
+  <p class="hero-sub">Rate every track 1–10, build your library, and see what your taste really looks like.</p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="app.html">
+      <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      Start Rating
+    </a>
+    <a class="btn-ghost" href="app.html">Sign in</a>
+  </div>
+
+  <div class="demo-cards">
+    <a class="demo-card" href="mailto:chherno.bsns@gmail.com" style="text-decoration:none;cursor:pointer;transition:border-color .18s" onmouseenter="this.style.borderColor='rgba(200,169,110,.35)'" onmouseleave="this.style.borderColor=''">
+      <div class="demo-card-art" style="background:rgba(200,169,110,.1)">✉️</div>
+      <div class="demo-card-info">
+        <div class="demo-card-title" style="max-width:160px">chherno.bsns@gmail.com</div>
+        <div class="demo-card-artist">Email</div>
+      </div>
+    </a>
+    <a class="demo-card" href="https://discord.com/users/chherno" target="_blank" rel="noopener" style="text-decoration:none;cursor:pointer;transition:border-color .18s" onmouseenter="this.style.borderColor='rgba(114,137,218,.45)'" onmouseleave="this.style.borderColor=''">
+      <div class="demo-card-art" style="background:rgba(114,137,218,.12)">
+        <svg width="20" height="20" viewBox="0 0 127.14 96.36" fill="rgba(114,137,218,.9)"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+      </div>
+      <div class="demo-card-info">
+        <div class="demo-card-title">chherno</div>
+        <div class="demo-card-artist">Discord</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="marquee-item">Spotify Search</span>
+    <span class="marquee-item">1–10 Ratings</span>
+    <span class="marquee-item">Album View</span>
+    <span class="marquee-item">Cloud Sync</span>
+    <span class="marquee-item">Statistics</span>
+    <span class="marquee-item">Community Feed</span>
+    <span class="marquee-item">Vinyl Grid</span>
+    <span class="marquee-item">Score Distribution</span>
+    <span class="marquee-item">Top Artists</span>
+    <span class="marquee-item">Spotify Search</span>
+    <span class="marquee-item">1–10 Ratings</span>
+    <span class="marquee-item">Album View</span>
+    <span class="marquee-item">Cloud Sync</span>
+    <span class="marquee-item">Statistics</span>
+    <span class="marquee-item">Community Feed</span>
+    <span class="marquee-item">Vinyl Grid</span>
+    <span class="marquee-item">Score Distribution</span>
+    <span class="marquee-item">Top Artists</span>
+  </div>
+</div>
+
+<section class="features">
+  <div class="section-divider"><div class="section-label-inner">What's inside</div></div>
+  <div class="feat-grid">
+    <div class="feat">
+      <div class="feat-num">01</div>
+      <span class="feat-icon">🔍</span>
+      <div class="feat-title">Spotify Search</div>
+      <p class="feat-desc">Find any track instantly with live Spotify data. Paste a link or search by name — no login required.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-num">02</div>
+      <span class="feat-icon">⭐</span>
+      <div class="feat-title">1–10 Ratings</div>
+      <p class="feat-desc">A smooth slider with contextual labels — Masterpiece, Great, Decent — makes every rating feel intentional.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-num">03</div>
+      <span class="feat-icon">☁️</span>
+      <div class="feat-title">Cloud Sync</div>
+      <p class="feat-desc">Ratings stored securely in Supabase. Your library travels with you across every device.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-num">04</div>
+      <span class="feat-icon">📊</span>
+      <div class="feat-title">Statistics</div>
+      <p class="feat-desc">Score distribution charts, top artists by count and average, rating tiers, and your personal curve.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-num">05</div>
+      <span class="feat-icon">💿</span>
+      <div class="feat-title">Album View</div>
+      <p class="feat-desc">Rated tracks grouped into animated vinyl records with track-by-track scores and inline editing.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-num">06</div>
+      <span class="feat-icon">👥</span>
+      <div class="feat-title">Community</div>
+      <p class="feat-desc">Follow friends, browse their top-rated tracks, and watch a live global feed of new ratings roll in.</p>
+    </div>
+  </div>
+</section>
+
+<div class="cta-strip">
+  <div class="cta-strip-title">Get in <em>touch</em></div>
+  <p class="cta-strip-sub">Questions, feedback, or just want to talk music? Reach out anytime.</p>
+  <div style="display:flex;gap:.85rem;justify-content:center;flex-wrap:wrap">
+    <a class="btn-primary" href="mailto:chherno.bsns@gmail.com" style="text-decoration:none">
+      <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+      chherno.bsns@gmail.com
+    </a>
+    <a class="btn-ghost" href="https://discord.com/users/chherno" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;gap:.5rem">
+      <svg width="15" height="15" viewBox="0 0 127.14 96.36" fill="currentColor"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+      Discord: chherno
+    </a>
+  </div>
+</div>
+
+<footer>Reverie &nbsp;·&nbsp; Personal Music Rankings &nbsp;·&nbsp; Powered by Spotify &amp; Supabase</footer>
+
+</body>
+</html>
