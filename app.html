@@ -1678,14 +1678,19 @@ function renderCommunity() {
     const feedHTML = feedSlice.map(({ item, username }) => _renderFeedCard(item, username)).join('');
     const hasMore = allItems.length > communityFeedLimit;
 
-    // Members list filtered by search
+    // Users list — exclude self, filtered by search
+    const otherUsernames = usernames.filter(u => u !== currentUser);
     const q = communitySearch.toLowerCase();
-    const filtered = q ? usernames.filter(u => u.toLowerCase().includes(q)) : usernames;
+    const filtered = q ? otherUsernames.filter(u => u.toLowerCase().includes(q)) : otherUsernames;
     const memberCards = filtered.map(u => {
       const s = getUserStats(u);
       const avgStr = s.count ? s.avg.toFixed(1) : '—';
+      const avatarUrl = _profilesCache?.[u]?.avatar_url;
+      const avatarInner = avatarUrl
+        ? `<img src="${esc(avatarUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" onerror="this.parentElement.innerHTML='${u[0].toUpperCase()}'">` 
+        : u[0].toUpperCase();
       return `<div class="user-card" onclick="openUserProfile('${esc(u)}')">
-        <div class="user-card-avatar">${u[0].toUpperCase()}</div>
+        <div class="user-card-avatar">${avatarInner}</div>
         <div class="user-card-info">
           <div class="user-card-name">${esc(u)}</div>
           <div class="user-card-stats">
@@ -1707,11 +1712,11 @@ function renderCommunity() {
           </div>
         </div>
         <div>
-          <div class="community-col-title">Members</div>
+          <div class="community-col-title">Users</div>
           <div class="community-search-wrap">
             <div class="community-search-bar">
               <svg style="width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:2;opacity:.7;flex-shrink:0" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input class="community-search-input" id="communitySearchInput" type="text" placeholder="Search members…"
+              <input class="community-search-input" id="communitySearchInput" type="text" placeholder="Search users…"
                 value="${esc(communitySearch)}" oninput="onCommunitySearch(this)">
             </div>
           </div>
