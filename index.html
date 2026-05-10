@@ -69,21 +69,21 @@ nav{
 
 .hero-disc{
   position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-40%);
+  transform:translate(-50%,-48%);
   width:min(700px,95vw);height:min(700px,95vw);border-radius:50%;
   background:radial-gradient(ellipse at 38% 42%,rgba(200,169,110,.10) 0%,rgba(200,169,110,.04) 35%,transparent 70%);
   pointer-events:none;
 }
 .vinyl-ring{
   position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-40%) rotate(0deg);
+  transform:translate(-50%,-48%) rotate(0deg);
   width:min(560px,85vw);height:min(560px,85vw);border-radius:50%;
   border:1px solid rgba(200,169,110,.07);
   animation:spin 28s linear infinite;pointer-events:none;
 }
 .vinyl-ring::before{content:'';position:absolute;inset:16%;border-radius:50%;border:1px solid rgba(200,169,110,.05)}
 .vinyl-ring::after{content:'';position:absolute;inset:40%;border-radius:50%;background:rgba(200,169,110,.06);border:1px solid rgba(200,169,110,.12)}
-@keyframes spin{to{transform:translate(-50%,-40%) rotate(360deg)}}
+@keyframes spin{to{transform:translate(-50%,-48%) rotate(360deg)}}
 
 .eyebrow{font-family:'DM Mono',monospace;font-size:.67rem;text-transform:uppercase;letter-spacing:.22em;color:var(--accent);margin-bottom:1.75rem;opacity:.65;animation:fadeUp .5s .05s ease both}
 .hero-title{font-family:'Playfair Display',serif;font-size:clamp(3.5rem,9.5vw,7rem);line-height:1.02;letter-spacing:-.03em;margin-bottom:1.4rem;animation:fadeUp .55s .12s ease both}
