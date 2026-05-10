@@ -1459,6 +1459,11 @@ async function doRegister() {
   if (data.user) {
     _currentUserId = data.user.id;
     _currentUsername = username;
+    // Insert the profile row immediately — don't rely on a DB trigger
+    await _sb.from('profiles').upsert(
+      { id: _currentUserId, username: username },
+      { onConflict: 'id' }
+    );
     _saveSession(_currentUserId, _currentUsername);
     _loadPrefsFromProfile(null);
     await _loadAllProfiles();
@@ -1812,7 +1817,7 @@ function getUserPrefs(username) {
 function saveUserPrefs(username, prefs) {
   _prefsCache = prefs;
   if (_currentUserId) {
-    _sb.from('profiles').update({ light_mode: !!prefs.lightMode }).eq('id', _currentUserId)
+    _sb.from('profiles').upsert({ id: _currentUserId, username: _currentUsername, light_mode: !!prefs.lightMode }, { onConflict: 'id' })
       .then(({ error }) => { if (error) console.error('[Reverie] saveUserPrefs error:', error); });
   }
 }
@@ -1822,7 +1827,7 @@ function getUserAvatar(username) {
 function saveUserAvatar(username, dataUrl) {
   _avatarCache = dataUrl || null;
   if (_currentUserId) {
-    _sb.from('profiles').update({ avatar_url: dataUrl || null }).eq('id', _currentUserId)
+    _sb.from('profiles').upsert({ id: _currentUserId, username: _currentUsername, avatar_url: dataUrl || null }, { onConflict: 'id' })
       .then(({ error }) => { if (error) console.error('[Reverie] saveUserAvatar error:', error); });
   }
 }
