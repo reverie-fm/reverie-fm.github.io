@@ -2119,17 +2119,34 @@ async function adminEditUser() {
   const target = targetSel.value;
   if (!target) { setAdminStatus('Select a user first', false); return; }
   const newUsername = document.getElementById('adminNewUsername').value.trim().toLowerCase();
-  if (!newUsername) { setAdminStatus('Enter a new username', false); return; }
+  const newPassword = document.getElementById('adminNewPassword').value;
+  if (!newUsername && !newPassword) { setAdminStatus('Enter a new username or password', false); return; }
   if (newUsername && !/^[a-z0-9_]{2,20}$/.test(newUsername)) {
     setAdminStatus('Username: 2–20 chars, letters/numbers/underscore', false); return;
   }
   const profile = _profilesCache?.[target];
   if (!profile) { setAdminStatus('User not found', false); return; }
+
+  // Update username in profiles table
   if (newUsername && newUsername !== target) {
     if (_profilesCache?.[newUsername]) { setAdminStatus('That username is already taken', false); return; }
     const { error } = await _sb.from('profiles').update({ username: newUsername }).eq('id', profile.id);
-    if (error) { setAdminStatus('Error: ' + error.message, false); return; }
+    if (error) { setAdminStatus('Error updating username: ' + error.message, false); return; }
   }
+
+  // Update password via Edge Function
+  if (newPassword) {
+    if (newPassword.length < 6) { setAdminStatus('Password must be at least 6 characters', false); return; }
+    const { data: { session } } = await _sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-update-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ targetUserId: profile.id, newPassword })
+    });
+    const json = await res.json();
+    if (!res.ok || json.error) { setAdminStatus('Error updating password: ' + (json.error || res.status), false); return; }
+  }
+
   setAdminStatus('✓ Changes saved', true);
   await _loadAllProfiles();
   setTimeout(() => {
