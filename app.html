@@ -1729,6 +1729,33 @@ function _renderCommunityUsers() {
     : `<div class="no-results">No users match "<strong>${esc(q)}</strong>"</div>`;
 }
 
+function _buildCommunityShell(el) {
+  el.innerHTML = `
+    <div class="community-layout">
+      <div>
+        <div class="community-col-title">Recent Ratings</div>
+        <div class="recent-feed" id="communityFeedContainer"><div class="empty-state" style="padding:2rem"><span class="loading-ring" style="width:18px;height:18px;border-width:2px;opacity:.6"></span></div></div>
+      </div>
+      <div>
+        <div class="community-col-title">Users</div>
+        <div class="community-search-wrap">
+          <div class="community-search-bar">
+            <svg style="width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:2;opacity:.7;flex-shrink:0" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input class="community-search-input" id="communitySearchInput" type="text" placeholder="Search users…">
+          </div>
+        </div>
+        <div id="communityUsersContainer"></div>
+      </div>
+    </div>`;
+  // Bind input event imperatively so this element is never re-created while typing
+  const inp = document.getElementById('communitySearchInput');
+  inp.value = communitySearch;
+  inp.addEventListener('input', function() {
+    communitySearch = this.value;
+    _renderCommunityUsers();
+  });
+}
+
 function renderCommunity() {
   const el = document.getElementById('communityContent');
   if (communityView === 'profile' && communityProfileUser) {
@@ -1738,36 +1765,17 @@ function renderCommunity() {
   }
   communityView = 'list';
 
-  el.innerHTML = `<div class="empty-state"><span class="loading-ring" style="width:22px;height:22px;border-width:2.5px;opacity:.7"></span></div>`;
+  // Build the shell once; never re-create it (preserves input focus)
+  if (!document.getElementById('communityFeedContainer')) {
+    _buildCommunityShell(el);
+  }
 
   Promise.all([_loadAllProfiles(), _fetchAllRatings()]).then(() => {
     const usernames = getAllUsernames();
-
     if (!usernames.length) {
       el.innerHTML = `<div class="empty-state"><div class="empty-icon">🌍</div><div class="empty-text">No other users yet.<br>Share this app with friends to see them here!</div></div>`;
       return;
     }
-
-    // Build stable layout shell with named containers
-    el.innerHTML = `
-      <div class="community-layout">
-        <div>
-          <div class="community-col-title">Recent Ratings</div>
-          <div class="recent-feed" id="communityFeedContainer"></div>
-        </div>
-        <div>
-          <div class="community-col-title">Users</div>
-          <div class="community-search-wrap">
-            <div class="community-search-bar">
-              <svg style="width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:2;opacity:.7;flex-shrink:0" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input class="community-search-input" id="communitySearchInput" type="text" placeholder="Search users…"
-                value="${esc(communitySearch)}" oninput="onCommunitySearch(this)">
-            </div>
-          </div>
-          <div id="communityUsersContainer"></div>
-        </div>
-      </div>`;
-
     _renderCommunityFeed();
     _renderCommunityUsers();
     _startCommunityRealtime();
