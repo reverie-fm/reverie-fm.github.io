@@ -152,6 +152,63 @@ nav{
 /* Scattered vinyl grooves */
 .groove-line{position:absolute;border-radius:50%;border:1px solid rgba(200,169,110,.06);pointer-events:none}
 
+/* ── Symmetrical side decorations ── */
+.side-deco{position:absolute;pointer-events:none;z-index:2}
+.side-deco-left{left:0;top:0;bottom:0}
+.side-deco-right{right:0;top:0;bottom:0}
+
+/* Rating scale ticks */
+.rating-scale{
+  position:absolute;display:flex;flex-direction:column;gap:0;
+  pointer-events:none;
+}
+.rating-scale-left{left:18px;top:50%;transform:translateY(-50%)}
+.rating-scale-right{right:18px;top:50%;transform:translateY(-50%)}
+.rtick{
+  display:flex;align-items:center;gap:5px;height:28px;
+  font-family:'DM Mono',monospace;font-size:.52rem;color:var(--accent);
+  opacity:.22;letter-spacing:.08em;
+}
+.rtick-line{height:1px;background:var(--accent);flex-shrink:0;transition:width .2s}
+.rating-scale-left .rtick{flex-direction:row}
+.rating-scale-left .rtick-line{width:12px}
+.rating-scale-left .rtick:nth-child(5n+1) .rtick-line{width:22px;opacity:.7}
+.rating-scale-right .rtick{flex-direction:row-reverse}
+.rating-scale-right .rtick-line{width:12px}
+.rating-scale-right .rtick:nth-child(5n+1) .rtick-line{width:22px;opacity:.7}
+
+/* Waveform bars */
+.waveform{
+  position:absolute;display:flex;align-items:flex-end;gap:2px;
+  pointer-events:none;
+}
+.waveform-left{left:16px}
+.waveform-right{right:16px}
+.wbar{width:3px;background:var(--accent);border-radius:2px 2px 0 0;opacity:.18;animation:wavePulse ease-in-out infinite alternate}
+@keyframes wavePulse{0%{transform:scaleY(.4);opacity:.1}100%{transform:scaleY(1);opacity:.22}}
+
+/* Arc brackets */
+.arc-bracket{position:absolute;pointer-events:none}
+.arc-bracket svg{display:block}
+
+/* Frequency dots column */
+.freq-dots{
+  position:absolute;display:flex;flex-direction:column;gap:6px;
+  pointer-events:none;
+}
+.fdot{
+  width:3px;height:3px;border-radius:50%;background:var(--accent);
+  opacity:.18;animation:freqPulse ease-in-out infinite alternate;
+}
+@keyframes freqPulse{0%{opacity:.08;transform:scale(.6)}100%{opacity:.25;transform:scale(1)}}
+
+/* Vertical dashed rule */
+.vert-rule{
+  position:absolute;width:1px;
+  background:repeating-linear-gradient(to bottom,rgba(200,169,110,.15) 0px,rgba(200,169,110,.15) 4px,transparent 4px,transparent 10px);
+  pointer-events:none;
+}
+
 .eyebrow{font-family:'DM Mono',monospace;font-size:.67rem;text-transform:uppercase;letter-spacing:.22em;color:var(--accent);margin-bottom:1.2rem;margin-top:2rem;opacity:.65;animation:fadeUp .5s .05s ease both}
 .hero-title .t1{color:var(--text);display:block}
 .hero-title .t2{color:var(--accent2);font-style:italic;display:block}
@@ -288,6 +345,166 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
   <div class="groove-line" style="width:180px;height:180px;top:18%;left:-20px;border-color:rgba(200,169,110,.04)"></div>
   <div class="groove-line" style="width:260px;height:260px;bottom:12%;right:-60px"></div>
   <div class="groove-line" style="width:180px;height:180px;bottom:18%;right:-20px;border-color:rgba(200,169,110,.04)"></div>
+
+  <!-- ── LEFT side decorations ── -->
+
+  <!-- Top-left arc bracket -->
+  <div class="arc-bracket" style="top:72px;left:0;opacity:.35">
+    <svg width="52" height="120" viewBox="0 0 52 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M48 4 Q8 4 8 60 Q8 116 48 116" stroke="rgba(200,169,110,.5)" stroke-width="1" fill="none"/>
+      <line x1="8" y1="60" x2="0" y2="60" stroke="rgba(200,169,110,.4)" stroke-width="1"/>
+      <circle cx="8" cy="4" r="2" fill="rgba(200,169,110,.35)"/>
+      <circle cx="8" cy="116" r="2" fill="rgba(200,169,110,.35)"/>
+      <circle cx="8" cy="60" r="1.5" fill="rgba(200,169,110,.5)"/>
+    </svg>
+  </div>
+
+  <!-- Left waveform strip — upper -->
+  <div class="waveform waveform-left" style="bottom:56%;height:44px">
+    <div class="wbar" style="height:12px;animation-duration:1.8s;animation-delay:0s"></div>
+    <div class="wbar" style="height:28px;animation-duration:2.1s;animation-delay:.15s"></div>
+    <div class="wbar" style="height:40px;animation-duration:1.6s;animation-delay:.3s"></div>
+    <div class="wbar" style="height:22px;animation-duration:2.4s;animation-delay:.45s"></div>
+    <div class="wbar" style="height:34px;animation-duration:1.9s;animation-delay:.6s"></div>
+    <div class="wbar" style="height:18px;animation-duration:2.2s;animation-delay:.75s"></div>
+    <div class="wbar" style="height:44px;animation-duration:1.7s;animation-delay:.9s"></div>
+    <div class="wbar" style="height:26px;animation-duration:2.0s;animation-delay:1.05s"></div>
+  </div>
+
+  <!-- Left 1–10 rating scale — centered vertically -->
+  <div class="rating-scale rating-scale-left">
+    <div class="rtick"><div class="rtick-line"></div><span>10</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>9</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>8</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>7</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>6</span></div>
+    <div class="rtick"><div class="rtick-line"></div></div>
+    <div class="rtick"><div class="rtick-line"></div><span>5</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>4</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>3</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>2</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>1</span></div>
+  </div>
+
+  <!-- Left waveform strip — lower -->
+  <div class="waveform waveform-left" style="top:56%;height:36px">
+    <div class="wbar" style="height:36px;animation-duration:2.3s;animation-delay:.2s"></div>
+    <div class="wbar" style="height:20px;animation-duration:1.7s;animation-delay:.5s"></div>
+    <div class="wbar" style="height:30px;animation-duration:2.0s;animation-delay:.8s"></div>
+    <div class="wbar" style="height:14px;animation-duration:1.9s;animation-delay:1.1s"></div>
+    <div class="wbar" style="height:28px;animation-duration:2.2s;animation-delay:1.4s"></div>
+    <div class="wbar" style="height:36px;animation-duration:1.6s;animation-delay:.3s"></div>
+    <div class="wbar" style="height:16px;animation-duration:2.1s;animation-delay:.7s"></div>
+  </div>
+
+  <!-- Left freq dot column -->
+  <div class="freq-dots" style="left:8px;top:calc(72px + 130px);bottom:calc(8% + 20px)">
+    <div class="fdot" style="animation-duration:1.4s;animation-delay:0s"></div>
+    <div class="fdot" style="animation-duration:2.1s;animation-delay:.3s"></div>
+    <div class="fdot" style="animation-duration:1.7s;animation-delay:.6s"></div>
+    <div class="fdot" style="animation-duration:2.4s;animation-delay:.9s"></div>
+    <div class="fdot" style="animation-duration:1.6s;animation-delay:1.2s"></div>
+    <div class="fdot" style="animation-duration:1.9s;animation-delay:1.5s"></div>
+    <div class="fdot" style="animation-duration:2.2s;animation-delay:1.8s"></div>
+    <div class="fdot" style="animation-duration:1.5s;animation-delay:2.1s"></div>
+    <div class="fdot" style="animation-duration:2.0s;animation-delay:2.4s"></div>
+    <div class="fdot" style="animation-duration:1.8s;animation-delay:2.7s"></div>
+    <div class="fdot" style="animation-duration:1.3s;animation-delay:3.0s"></div>
+    <div class="fdot" style="animation-duration:2.3s;animation-delay:3.3s"></div>
+  </div>
+
+  <!-- Left vertical dashed rule -->
+  <div class="vert-rule" style="left:28px;top:72px;bottom:calc(8% + 4px)"></div>
+
+  <!-- Bottom-left arc bracket -->
+  <div class="arc-bracket" style="bottom:calc(8% - 10px);left:0;opacity:.3;transform:scaleY(-1)">
+    <svg width="52" height="80" viewBox="0 0 52 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M48 4 Q8 4 8 40 Q8 76 48 76" stroke="rgba(200,169,110,.45)" stroke-width="1" fill="none"/>
+      <line x1="8" y1="40" x2="0" y2="40" stroke="rgba(200,169,110,.35)" stroke-width="1"/>
+      <circle cx="8" cy="4" r="2" fill="rgba(200,169,110,.3)"/>
+      <circle cx="8" cy="76" r="2" fill="rgba(200,169,110,.3)"/>
+    </svg>
+  </div>
+
+  <!-- ── RIGHT side decorations (y=x mirror of left) ── -->
+
+  <!-- Top-right arc bracket -->
+  <div class="arc-bracket" style="top:72px;right:0;opacity:.35;transform:scaleX(-1)">
+    <svg width="52" height="120" viewBox="0 0 52 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M48 4 Q8 4 8 60 Q8 116 48 116" stroke="rgba(200,169,110,.5)" stroke-width="1" fill="none"/>
+      <line x1="8" y1="60" x2="0" y2="60" stroke="rgba(200,169,110,.4)" stroke-width="1"/>
+      <circle cx="8" cy="4" r="2" fill="rgba(200,169,110,.35)"/>
+      <circle cx="8" cy="116" r="2" fill="rgba(200,169,110,.35)"/>
+      <circle cx="8" cy="60" r="1.5" fill="rgba(200,169,110,.5)"/>
+    </svg>
+  </div>
+
+  <!-- Right waveform strip — upper -->
+  <div class="waveform waveform-right" style="bottom:56%;height:44px">
+    <div class="wbar" style="height:12px;animation-duration:1.8s;animation-delay:0s"></div>
+    <div class="wbar" style="height:28px;animation-duration:2.1s;animation-delay:.15s"></div>
+    <div class="wbar" style="height:40px;animation-duration:1.6s;animation-delay:.3s"></div>
+    <div class="wbar" style="height:22px;animation-duration:2.4s;animation-delay:.45s"></div>
+    <div class="wbar" style="height:34px;animation-duration:1.9s;animation-delay:.6s"></div>
+    <div class="wbar" style="height:18px;animation-duration:2.2s;animation-delay:.75s"></div>
+    <div class="wbar" style="height:44px;animation-duration:1.7s;animation-delay:.9s"></div>
+    <div class="wbar" style="height:26px;animation-duration:2.0s;animation-delay:1.05s"></div>
+  </div>
+
+  <!-- Right 1–10 rating scale — centered vertically -->
+  <div class="rating-scale rating-scale-right">
+    <div class="rtick"><div class="rtick-line"></div><span>10</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>9</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>8</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>7</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>6</span></div>
+    <div class="rtick"><div class="rtick-line"></div></div>
+    <div class="rtick"><div class="rtick-line"></div><span>5</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>4</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>3</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>2</span></div>
+    <div class="rtick"><div class="rtick-line"></div><span>1</span></div>
+  </div>
+
+  <!-- Right waveform strip — lower -->
+  <div class="waveform waveform-right" style="top:56%;height:36px">
+    <div class="wbar" style="height:36px;animation-duration:2.3s;animation-delay:.2s"></div>
+    <div class="wbar" style="height:20px;animation-duration:1.7s;animation-delay:.5s"></div>
+    <div class="wbar" style="height:30px;animation-duration:2.0s;animation-delay:.8s"></div>
+    <div class="wbar" style="height:14px;animation-duration:1.9s;animation-delay:1.1s"></div>
+    <div class="wbar" style="height:28px;animation-duration:2.2s;animation-delay:1.4s"></div>
+    <div class="wbar" style="height:36px;animation-duration:1.6s;animation-delay:.3s"></div>
+    <div class="wbar" style="height:16px;animation-duration:2.1s;animation-delay:.7s"></div>
+  </div>
+
+  <!-- Right freq dot column -->
+  <div class="freq-dots" style="right:8px;top:calc(72px + 130px);bottom:calc(8% + 20px)">
+    <div class="fdot" style="animation-duration:1.4s;animation-delay:0s"></div>
+    <div class="fdot" style="animation-duration:2.1s;animation-delay:.3s"></div>
+    <div class="fdot" style="animation-duration:1.7s;animation-delay:.6s"></div>
+    <div class="fdot" style="animation-duration:2.4s;animation-delay:.9s"></div>
+    <div class="fdot" style="animation-duration:1.6s;animation-delay:1.2s"></div>
+    <div class="fdot" style="animation-duration:1.9s;animation-delay:1.5s"></div>
+    <div class="fdot" style="animation-duration:2.2s;animation-delay:1.8s"></div>
+    <div class="fdot" style="animation-duration:1.5s;animation-delay:2.1s"></div>
+    <div class="fdot" style="animation-duration:2.0s;animation-delay:2.4s"></div>
+    <div class="fdot" style="animation-duration:1.8s;animation-delay:2.7s"></div>
+    <div class="fdot" style="animation-duration:1.3s;animation-delay:3.0s"></div>
+    <div class="fdot" style="animation-duration:2.3s;animation-delay:3.3s"></div>
+  </div>
+
+  <!-- Right vertical dashed rule -->
+  <div class="vert-rule" style="right:28px;top:72px;bottom:calc(8% + 4px)"></div>
+
+  <!-- Bottom-right arc bracket -->
+  <div class="arc-bracket" style="bottom:calc(8% - 10px);right:0;opacity:.3;transform:scaleX(-1) scaleY(-1)">
+    <svg width="52" height="80" viewBox="0 0 52 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M48 4 Q8 4 8 40 Q8 76 48 76" stroke="rgba(200,169,110,.45)" stroke-width="1" fill="none"/>
+      <line x1="8" y1="40" x2="0" y2="40" stroke="rgba(200,169,110,.35)" stroke-width="1"/>
+      <circle cx="8" cy="4" r="2" fill="rgba(200,169,110,.3)"/>
+      <circle cx="8" cy="76" r="2" fill="rgba(200,169,110,.3)"/>
+    </svg>
+  </div>
 
   <div class="hero-content">
   <div class="eyebrow">Personal Music Rankings</div>
