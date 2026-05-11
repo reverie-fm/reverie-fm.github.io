@@ -1675,8 +1675,8 @@ function renderCommunity() {
     const feedHTML = feedSlice.map(({ item, username }) => _renderFeedCard(item, username)).join('');
     const hasMore = allItems.length > communityFeedLimit;
 
-    // Users list — exclude self, filtered by search
-    const otherUsernames = usernames.filter(u => u !== currentUser);
+    // Users list — exclude self by ID, filtered by search
+    const otherUsernames = usernames.filter(u => _profilesCache?.[u]?.id !== _currentUserId);
     const q = communitySearch.toLowerCase();
     const filtered = q ? otherUsernames.filter(u => u.toLowerCase().includes(q)) : otherUsernames;
     const memberCards = filtered.map(u => {
@@ -1798,7 +1798,7 @@ function renderUserProfile(el, username) {
     <button class="profile-back" onclick="backToCommunity()">← Back to Community</button>
     <div class="profile-header-card">
       <div class="profile-header-inner">
-        <div class="profile-avatar-lg">${username[0].toUpperCase()}</div>
+        <div class="profile-avatar-lg">${_profilesCache?.[username]?.avatar_url ? `<img src="${esc(_profilesCache[username].avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" onerror="this.parentElement.innerHTML='${username[0].toUpperCase()}'">` : username[0].toUpperCase()}</div>
         <div>
           <div class="profile-name">${esc(username)}</div>
           <div class="profile-joined">Member since ${joinedStr}</div>
