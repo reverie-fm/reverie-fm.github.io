@@ -85,6 +85,7 @@ nav{
   background:radial-gradient(circle, #1a1710 0%, #0e0d0b 40%, #080807 70%, #05050403 100%);
   box-shadow:0 0 80px rgba(200,169,110,.07),0 0 160px rgba(200,169,110,.03);
   animation:spin 34s linear infinite;pointer-events:none;
+  z-index:5;
 }
 /* Vinyl grooves — tight concentric rings */
 .vinyl-ring{
@@ -100,6 +101,7 @@ nav{
       rgba(200,169,110,.032) 7px
     );
   animation:spin 34s linear infinite;
+  z-index:5;
 }
 /* Sheen overlay */
 .vinyl-ring::before{
@@ -123,8 +125,8 @@ nav{
   width:min(640px,88vw);height:min(640px,88vw);border-radius:50%;
   border:1.5px solid rgba(200,169,110,.12);
   pointer-events:none;
-  /* Center hole */
   box-shadow:inset 0 0 0 300px transparent;
+  z-index:5;
 }
 /* Center spindle hole */
 .vinyl-ring3{
@@ -134,7 +136,7 @@ nav{
   background:#020202;
   border:1px solid rgba(200,169,110,.3);
   pointer-events:none;
-  z-index:1;
+  z-index:6;
 }
 .hero-content{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;text-align:center;max-width:860px;margin:0 auto}
 .hero-title{font-family:'Playfair Display',serif;font-size:clamp(3.8rem,8vw,6.5rem);line-height:1.02;letter-spacing:-.03em;margin-bottom:.9rem;animation:fadeUp .55s .12s ease both;text-shadow:0 2px 40px rgba(0,0,0,.9),0 0 80px rgba(0,0,0,.7)}
@@ -152,61 +154,30 @@ nav{
 /* Scattered vinyl grooves */
 .groove-line{position:absolute;border-radius:50%;border:1px solid rgba(200,169,110,.06);pointer-events:none}
 
-/* ── Symmetrical side decorations ── */
-.side-deco{position:absolute;pointer-events:none;z-index:2}
-.side-deco-left{left:0;top:0;bottom:0}
-.side-deco-right{right:0;top:0;bottom:0}
+/* ── Geometric side shapes ── */
+.geo{position:absolute;pointer-events:none;z-index:3}
 
-/* Rating scale ticks */
-.rating-scale{
-  position:absolute;display:flex;flex-direction:column;gap:0;
-  pointer-events:none;
+/* ── Stats bar ── */
+.hero-stats{
+  display:flex;gap:2.5rem;justify-content:center;align-items:center;
+  margin-top:2.2rem;animation:fadeUp .55s .35s ease both;
+  flex-wrap:wrap;
 }
-.rating-scale-left{left:18px;top:50%;transform:translateY(-50%)}
-.rating-scale-right{right:18px;top:50%;transform:translateY(-50%)}
-.rtick{
-  display:flex;align-items:center;gap:5px;height:28px;
-  font-family:'DM Mono',monospace;font-size:.52rem;color:var(--accent);
-  opacity:.22;letter-spacing:.08em;
+.stat-item{
+  display:flex;flex-direction:column;align-items:center;gap:.18rem;
+  position:relative;
 }
-.rtick-line{height:1px;background:var(--accent);flex-shrink:0;transition:width .2s}
-.rating-scale-left .rtick{flex-direction:row}
-.rating-scale-left .rtick-line{width:12px}
-.rating-scale-left .rtick:nth-child(5n+1) .rtick-line{width:22px;opacity:.7}
-.rating-scale-right .rtick{flex-direction:row-reverse}
-.rating-scale-right .rtick-line{width:12px}
-.rating-scale-right .rtick:nth-child(5n+1) .rtick-line{width:22px;opacity:.7}
-
-/* Waveform bars */
-.waveform{
-  position:absolute;display:flex;align-items:flex-end;gap:2px;
-  pointer-events:none;
+.stat-item + .stat-item::before{
+  content:'';position:absolute;left:-1.25rem;top:50%;transform:translateY(-50%);
+  width:1px;height:22px;background:var(--border2);opacity:.4;
 }
-.waveform-left{left:16px}
-.waveform-right{right:16px}
-.wbar{width:3px;background:var(--accent);border-radius:2px 2px 0 0;opacity:.18;animation:wavePulse ease-in-out infinite alternate}
-@keyframes wavePulse{0%{transform:scaleY(.4);opacity:.1}100%{transform:scaleY(1);opacity:.22}}
-
-/* Arc brackets */
-.arc-bracket{position:absolute;pointer-events:none}
-.arc-bracket svg{display:block}
-
-/* Frequency dots column */
-.freq-dots{
-  position:absolute;display:flex;flex-direction:column;gap:6px;
-  pointer-events:none;
+.stat-num{
+  font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:700;
+  color:var(--accent2);letter-spacing:-.02em;line-height:1;
 }
-.fdot{
-  width:3px;height:3px;border-radius:50%;background:var(--accent);
-  opacity:.18;animation:freqPulse ease-in-out infinite alternate;
-}
-@keyframes freqPulse{0%{opacity:.08;transform:scale(.6)}100%{opacity:.25;transform:scale(1)}}
-
-/* Vertical dashed rule */
-.vert-rule{
-  position:absolute;width:1px;
-  background:repeating-linear-gradient(to bottom,rgba(200,169,110,.15) 0px,rgba(200,169,110,.15) 4px,transparent 4px,transparent 10px);
-  pointer-events:none;
+.stat-label{
+  font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;
+  letter-spacing:.16em;color:var(--muted);opacity:.6;
 }
 
 .eyebrow{font-family:'DM Mono',monospace;font-size:.67rem;text-transform:uppercase;letter-spacing:.22em;color:var(--accent);margin-bottom:1.2rem;margin-top:2rem;opacity:.65;animation:fadeUp .5s .05s ease both}
@@ -340,171 +311,374 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
   <div class="vinyl-ring2"></div>
   <div class="vinyl-ring3"></div>
 
-  <!-- Groove arcs top-left and bottom-right mirrored -->
-  <div class="groove-line" style="width:260px;height:260px;top:12%;left:-60px"></div>
-  <div class="groove-line" style="width:180px;height:180px;top:18%;left:-20px;border-color:rgba(200,169,110,.04)"></div>
-  <div class="groove-line" style="width:260px;height:260px;bottom:12%;right:-60px"></div>
-  <div class="groove-line" style="width:180px;height:180px;bottom:18%;right:-20px;border-color:rgba(200,169,110,.04)"></div>
+  <!-- Groove arcs — edge-hugging, y=x mirrored -->
+  <div class="groove-line" style="width:300px;height:300px;top:8%;left:-120px"></div>
+  <div class="groove-line" style="width:200px;height:200px;top:14%;left:-60px;border-color:rgba(200,169,110,.04)"></div>
+  <div class="groove-line" style="width:300px;height:300px;bottom:8%;right:-120px"></div>
+  <div class="groove-line" style="width:200px;height:200px;bottom:14%;right:-60px;border-color:rgba(200,169,110,.04)"></div>
 
-  <!-- ── LEFT side decorations ── -->
+  <!--
+    ═══════════════════════════════════════════════════════════════
+    DIAGONAL MIRROR SYSTEM  (y = x axis through viewport center)
+    ─────────────────────────────────────────────────────────────
+    A shape at  top:A   left:B   mirrors to  top:B   left:A
+    This means TL cluster (top:5%, left:0) → mirror is (top:0, left:5%)
+    and the mirror of TR (top:5%, right:0) → (top:0%, right:5%) — same corner!
+    
+    In practice for a hero that's ~100vw × 100vh:
+    • "top-left gravitating" family:  top anchored  + left anchored
+       → diagonal mirror swaps the percentages on the same corner
+    • "top-right gravitating" family: top anchored  + right anchored
+       → diagonal mirror is bottom-left anchored
+    
+    Implementation:
+      Family A (TL/BR diagonal):
+        - Original:  top:T, left:L   (T and L small → hugs top-left corner)
+        - Mirror:    top:L, left:T   (same corner, axes swapped)
+      Family B (TR/BL diagonal):
+        - Original:  top:T, right:R  (T small, R small → hugs top-right)
+        - Mirror:    bottom:T, left:R (diagonal reflected)
+    
+    For simplicity and visual effect: we use the point-reflection center
+    (180° rotation) for the SAME side, and true y=x swap for cross-sides.
+    The key visual requirement is:
+      - shapes hug the edges (left:0 / right:0 / top:0 / bottom:0)
+      - some shapes send a dramatic arm reaching towards center, then pull back
+      - each shape has its exact diagonal mirror counterpart
+    ═══════════════════════════════════════════════════════════════
+  -->
 
-  <!-- Top-left arc bracket -->
-  <div class="arc-bracket" style="top:72px;left:0;opacity:.35">
-    <svg width="52" height="120" viewBox="0 0 52 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M48 4 Q8 4 8 60 Q8 116 48 116" stroke="rgba(200,169,110,.5)" stroke-width="1" fill="none"/>
-      <line x1="8" y1="60" x2="0" y2="60" stroke="rgba(200,169,110,.4)" stroke-width="1"/>
-      <circle cx="8" cy="4" r="2" fill="rgba(200,169,110,.35)"/>
-      <circle cx="8" cy="116" r="2" fill="rgba(200,169,110,.35)"/>
-      <circle cx="8" cy="60" r="1.5" fill="rgba(200,169,110,.5)"/>
-    </svg>
-  </div>
+  <!-- ═══ FAMILY A: TOP-LEFT  ↔  BOTTOM-RIGHT (y=x diagonal) ═══ -->
 
-  <!-- Left waveform strip — upper -->
-  <div class="waveform waveform-left" style="bottom:56%;height:44px">
-    <div class="wbar" style="height:12px;animation-duration:1.8s;animation-delay:0s"></div>
-    <div class="wbar" style="height:28px;animation-duration:2.1s;animation-delay:.15s"></div>
-    <div class="wbar" style="height:40px;animation-duration:1.6s;animation-delay:.3s"></div>
-    <div class="wbar" style="height:22px;animation-duration:2.4s;animation-delay:.45s"></div>
-    <div class="wbar" style="height:34px;animation-duration:1.9s;animation-delay:.6s"></div>
-    <div class="wbar" style="height:18px;animation-duration:2.2s;animation-delay:.75s"></div>
-    <div class="wbar" style="height:44px;animation-duration:1.7s;animation-delay:.9s"></div>
-    <div class="wbar" style="height:26px;animation-duration:2.0s;animation-delay:1.05s"></div>
-  </div>
+  <!-- A1: Concentric ring burst bleeding off TL corner -->
+  <svg class="geo" style="top:-40px;left:-80px;width:240px;height:240px" viewBox="0 0 240 240" fill="none">
+    <circle cx="160" cy="160" r="110" stroke="rgba(200,169,110,.13)" stroke-width="1.5"/>
+    <circle cx="160" cy="160" r="88"  stroke="rgba(200,169,110,.09)" stroke-width="1.2"/>
+    <circle cx="160" cy="160" r="66"  stroke="rgba(200,169,110,.06)" stroke-width="1"/>
+    <circle cx="160" cy="160" r="44"  stroke="rgba(200,169,110,.045)" stroke-width=".8"/>
+    <circle cx="160" cy="160" r="22"  stroke="rgba(200,169,110,.035)" stroke-width=".6"/>
+    <circle cx="270" cy="160" r="5"   fill="rgba(200,169,110,.3)"/>
+    <circle cx="160" cy="270" r="4"   fill="rgba(200,169,110,.22)"/>
+    <circle cx="236" cy="84"  r="3"   fill="rgba(200,169,110,.16)"/>
+  </svg>
+  <!-- A1 mirror: swap top↔left → bottom-right corner -->
+  <svg class="geo" style="bottom:-40px;right:-80px;width:240px;height:240px;transform:rotate(180deg)" viewBox="0 0 240 240" fill="none">
+    <circle cx="160" cy="160" r="110" stroke="rgba(200,169,110,.13)" stroke-width="1.5"/>
+    <circle cx="160" cy="160" r="88"  stroke="rgba(200,169,110,.09)" stroke-width="1.2"/>
+    <circle cx="160" cy="160" r="66"  stroke="rgba(200,169,110,.06)" stroke-width="1"/>
+    <circle cx="160" cy="160" r="44"  stroke="rgba(200,169,110,.045)" stroke-width=".8"/>
+    <circle cx="160" cy="160" r="22"  stroke="rgba(200,169,110,.035)" stroke-width=".6"/>
+    <circle cx="270" cy="160" r="5"   fill="rgba(200,169,110,.3)"/>
+    <circle cx="160" cy="270" r="4"   fill="rgba(200,169,110,.22)"/>
+    <circle cx="236" cy="84"  r="3"   fill="rgba(200,169,110,.16)"/>
+  </svg>
 
-  <!-- Left 1–10 rating scale — centered vertically -->
-  <div class="rating-scale rating-scale-left">
-    <div class="rtick"><div class="rtick-line"></div><span>10</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>9</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>8</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>7</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>6</span></div>
-    <div class="rtick"><div class="rtick-line"></div></div>
-    <div class="rtick"><div class="rtick-line"></div><span>5</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>4</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>3</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>2</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>1</span></div>
-  </div>
+  <!-- A2: Long sweep from TL edge reaching 70% across, dipping toward center then retreating -->
+  <svg class="geo" style="top:40px;left:0;width:80vw;height:280px;max-width:960px" viewBox="0 0 960 280" fill="none" preserveAspectRatio="none">
+    <!-- Main arc: starts at left edge, swings deep inward (y≈140 at midpoint), then floats back to edge region -->
+    <path d="M0 8 C120 0 300 60 480 130 C600 175 700 155 820 100 C880 74 930 55 960 48" stroke="rgba(200,169,110,.09)" stroke-width="1.3" fill="none"/>
+    <path d="M0 28 C130 18 320 82 500 150 C620 192 720 170 840 116 C895 90 940 70 960 64" stroke="rgba(200,169,110,.055)" stroke-width="1" fill="none"/>
+    <path d="M0 46 C140 36 340 102 520 168 C640 208 740 184 860 132 C910 106 950 86 960 80" stroke="rgba(200,169,110,.032)" stroke-width=".8" fill="none"/>
+    <circle cx="480" cy="130" r="3.5" fill="rgba(200,169,110,.2)"/>
+    <circle cx="300" cy="60"  r="2.5" fill="rgba(200,169,110,.15)"/>
+    <circle cx="720" cy="155" r="2"   fill="rgba(200,169,110,.13)"/>
+    <circle cx="960" cy="48"  r="3"   fill="rgba(200,169,110,.22)"/>
+  </svg>
+  <!-- A2 mirror: same geometry anchored bottom-right, rotated 180° -->
+  <svg class="geo" style="bottom:40px;right:0;width:80vw;height:280px;max-width:960px;transform:rotate(180deg)" viewBox="0 0 960 280" fill="none" preserveAspectRatio="none">
+    <path d="M0 8 C120 0 300 60 480 130 C600 175 700 155 820 100 C880 74 930 55 960 48" stroke="rgba(200,169,110,.09)" stroke-width="1.3" fill="none"/>
+    <path d="M0 28 C130 18 320 82 500 150 C620 192 720 170 840 116 C895 90 940 70 960 64" stroke="rgba(200,169,110,.055)" stroke-width="1" fill="none"/>
+    <path d="M0 46 C140 36 340 102 520 168 C640 208 740 184 860 132 C910 106 950 86 960 80" stroke="rgba(200,169,110,.032)" stroke-width=".8" fill="none"/>
+    <circle cx="480" cy="130" r="3.5" fill="rgba(200,169,110,.2)"/>
+    <circle cx="300" cy="60"  r="2.5" fill="rgba(200,169,110,.15)"/>
+    <circle cx="720" cy="155" r="2"   fill="rgba(200,169,110,.13)"/>
+    <circle cx="960" cy="48"  r="3"   fill="rgba(200,169,110,.22)"/>
+  </svg>
 
-  <!-- Left waveform strip — lower -->
-  <div class="waveform waveform-left" style="top:56%;height:36px">
-    <div class="wbar" style="height:36px;animation-duration:2.3s;animation-delay:.2s"></div>
-    <div class="wbar" style="height:20px;animation-duration:1.7s;animation-delay:.5s"></div>
-    <div class="wbar" style="height:30px;animation-duration:2.0s;animation-delay:.8s"></div>
-    <div class="wbar" style="height:14px;animation-duration:1.9s;animation-delay:1.1s"></div>
-    <div class="wbar" style="height:28px;animation-duration:2.2s;animation-delay:1.4s"></div>
-    <div class="wbar" style="height:36px;animation-duration:1.6s;animation-delay:.3s"></div>
-    <div class="wbar" style="height:16px;animation-duration:2.1s;animation-delay:.7s"></div>
-  </div>
+  <!-- A3: Crescent bracket hugging left side, opens toward center -->
+  <svg class="geo" style="top:28%;left:0;width:88px;height:160px" viewBox="0 0 88 160" fill="none">
+    <path d="M82 5  C12 5  12 155 82 155" stroke="rgba(200,169,110,.2)"  stroke-width="1.6" fill="none"/>
+    <path d="M82 20 C34 20 34 140 82 140" stroke="rgba(200,169,110,.11)" stroke-width="1.1" fill="none"/>
+    <path d="M82 36 C52 36 52 124 82 124" stroke="rgba(200,169,110,.06)" stroke-width=".8"  fill="none"/>
+    <circle cx="82" cy="5"   r="3.5" fill="rgba(200,169,110,.3)"/>
+    <circle cx="82" cy="155" r="3.5" fill="rgba(200,169,110,.3)"/>
+    <circle cx="82" cy="80"  r="2.5" fill="rgba(200,169,110,.42)"/>
+    <circle cx="12" cy="80"  r="1.5" fill="rgba(200,169,110,.2)"/>
+  </svg>
+  <!-- A3 mirror: top:28% ↔ left:28% → this corner stays same but axes swapped: top = old left% → 0%, left = old top% → 28% is ~same, so place at left edge, top = 28% as before but now it's the "left" coordinate becoming "top" -->
+  <!-- For true y=x: shape at top:28%, left:0 → mirror at top:0%, left:28% — which is top-edge, not left edge -->
+  <!-- We'll instead use point symmetry (180° rotation) for same family and true diagonal for cross-families -->
+  <svg class="geo" style="bottom:28%;right:0;width:88px;height:160px;transform:rotate(180deg)" viewBox="0 0 88 160" fill="none">
+    <path d="M82 5  C12 5  12 155 82 155" stroke="rgba(200,169,110,.2)"  stroke-width="1.6" fill="none"/>
+    <path d="M82 20 C34 20 34 140 82 140" stroke="rgba(200,169,110,.11)" stroke-width="1.1" fill="none"/>
+    <path d="M82 36 C52 36 52 124 82 124" stroke="rgba(200,169,110,.06)" stroke-width=".8"  fill="none"/>
+    <circle cx="82" cy="5"   r="3.5" fill="rgba(200,169,110,.3)"/>
+    <circle cx="82" cy="155" r="3.5" fill="rgba(200,169,110,.3)"/>
+    <circle cx="82" cy="80"  r="2.5" fill="rgba(200,169,110,.42)"/>
+    <circle cx="12" cy="80"  r="1.5" fill="rgba(200,169,110,.2)"/>
+  </svg>
 
-  <!-- Left freq dot column -->
-  <div class="freq-dots" style="left:8px;top:calc(72px + 130px);bottom:calc(8% + 20px)">
-    <div class="fdot" style="animation-duration:1.4s;animation-delay:0s"></div>
-    <div class="fdot" style="animation-duration:2.1s;animation-delay:.3s"></div>
-    <div class="fdot" style="animation-duration:1.7s;animation-delay:.6s"></div>
-    <div class="fdot" style="animation-duration:2.4s;animation-delay:.9s"></div>
-    <div class="fdot" style="animation-duration:1.6s;animation-delay:1.2s"></div>
-    <div class="fdot" style="animation-duration:1.9s;animation-delay:1.5s"></div>
-    <div class="fdot" style="animation-duration:2.2s;animation-delay:1.8s"></div>
-    <div class="fdot" style="animation-duration:1.5s;animation-delay:2.1s"></div>
-    <div class="fdot" style="animation-duration:2.0s;animation-delay:2.4s"></div>
-    <div class="fdot" style="animation-duration:1.8s;animation-delay:2.7s"></div>
-    <div class="fdot" style="animation-duration:1.3s;animation-delay:3.0s"></div>
-    <div class="fdot" style="animation-duration:2.3s;animation-delay:3.3s"></div>
-  </div>
+  <!-- A4: Diamond cluster, TL quadrant, 30% in from left -->
+  <svg class="geo" style="top:18%;left:22px;width:56px;height:56px" viewBox="0 0 56 56" fill="none">
+    <polygon points="28,1 55,28 28,55 1,28"  stroke="rgba(200,169,110,.32)" stroke-width="1.5" fill="rgba(200,169,110,.04)"/>
+    <polygon points="28,9 47,28 28,47 9,28"   stroke="rgba(200,169,110,.18)" stroke-width="1.1" fill="rgba(200,169,110,.03)"/>
+    <polygon points="28,17 39,28 28,39 17,28" stroke="rgba(200,169,110,.09)" stroke-width=".9" fill="rgba(200,169,110,.04)"/>
+    <circle cx="28" cy="28" r="3" fill="rgba(200,169,110,.25)"/>
+  </svg>
+  <!-- A4 mirror: swapping top%↔left% → top:22px≈3%, left:18% — approximated -->
+  <svg class="geo" style="bottom:18%;right:22px;width:56px;height:56px;transform:rotate(180deg)" viewBox="0 0 56 56" fill="none">
+    <polygon points="28,1 55,28 28,55 1,28"  stroke="rgba(200,169,110,.32)" stroke-width="1.5" fill="rgba(200,169,110,.04)"/>
+    <polygon points="28,9 47,28 28,47 9,28"   stroke="rgba(200,169,110,.18)" stroke-width="1.1" fill="rgba(200,169,110,.03)"/>
+    <polygon points="28,17 39,28 28,39 17,28" stroke="rgba(200,169,110,.09)" stroke-width=".9" fill="rgba(200,169,110,.04)"/>
+    <circle cx="28" cy="28" r="3" fill="rgba(200,169,110,.25)"/>
+  </svg>
 
-  <!-- Left vertical dashed rule -->
-  <div class="vert-rule" style="left:28px;top:72px;bottom:calc(8% + 4px)"></div>
+  <!-- A5: Hexagon cluster hugging left, mid-height -->
+  <svg class="geo" style="top:44%;left:-8px;width:96px;height:110px" viewBox="0 0 96 110" fill="none">
+    <polygon points="48,2 94,27 94,83 48,108 2,83 2,27"  stroke="rgba(200,169,110,.19)" stroke-width="1.4" fill="rgba(200,169,110,.028)"/>
+    <polygon points="48,14 80,34 80,76 48,96 16,76 16,34" stroke="rgba(200,169,110,.11)" stroke-width="1.1" fill="rgba(200,169,110,.02)"/>
+    <polygon points="48,26 66,40 66,70 48,84 30,70 30,40" stroke="rgba(200,169,110,.06)" stroke-width=".8" fill="none"/>
+    <circle cx="48" cy="55" r="4.5" fill="rgba(200,169,110,.17)"/>
+    <circle cx="48" cy="55" r="1.8" fill="rgba(200,169,110,.38)"/>
+  </svg>
+  <svg class="geo" style="bottom:44%;right:-8px;width:96px;height:110px;transform:rotate(180deg)" viewBox="0 0 96 110" fill="none">
+    <polygon points="48,2 94,27 94,83 48,108 2,83 2,27"  stroke="rgba(200,169,110,.19)" stroke-width="1.4" fill="rgba(200,169,110,.028)"/>
+    <polygon points="48,14 80,34 80,76 48,96 16,76 16,34" stroke="rgba(200,169,110,.11)" stroke-width="1.1" fill="rgba(200,169,110,.02)"/>
+    <polygon points="48,26 66,40 66,70 48,84 30,70 30,40" stroke="rgba(200,169,110,.06)" stroke-width=".8" fill="none"/>
+    <circle cx="48" cy="55" r="4.5" fill="rgba(200,169,110,.17)"/>
+    <circle cx="48" cy="55" r="1.8" fill="rgba(200,169,110,.38)"/>
+  </svg>
 
-  <!-- Bottom-left arc bracket -->
-  <div class="arc-bracket" style="bottom:calc(8% - 10px);left:0;opacity:.3;transform:scaleY(-1)">
-    <svg width="52" height="80" viewBox="0 0 52 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M48 4 Q8 4 8 40 Q8 76 48 76" stroke="rgba(200,169,110,.45)" stroke-width="1" fill="none"/>
-      <line x1="8" y1="40" x2="0" y2="40" stroke="rgba(200,169,110,.35)" stroke-width="1"/>
-      <circle cx="8" cy="4" r="2" fill="rgba(200,169,110,.3)"/>
-      <circle cx="8" cy="76" r="2" fill="rgba(200,169,110,.3)"/>
-    </svg>
-  </div>
+  <!-- A6: Trailing micro-dots cascading inward from bottom-left of TL zone -->
+  <svg class="geo" style="top:62%;left:10px;width:140px;height:70px" viewBox="0 0 140 70" fill="none">
+    <circle cx="10"  cy="35" r="6"   stroke="rgba(200,169,110,.22)"  stroke-width="1.1" fill="rgba(200,169,110,.05)"/>
+    <circle cx="10"  cy="35" r="2.5" fill="rgba(200,169,110,.2)"/>
+    <circle cx="38"  cy="20" r="4.5" stroke="rgba(200,169,110,.16)" stroke-width=".9" fill="rgba(200,169,110,.03)"/>
+    <circle cx="66"  cy="44" r="4"   stroke="rgba(200,169,110,.12)" stroke-width=".8" fill="rgba(200,169,110,.03)"/>
+    <circle cx="94"  cy="22" r="3"   stroke="rgba(200,169,110,.08)" stroke-width=".7" fill="rgba(200,169,110,.02)"/>
+    <circle cx="120" cy="40" r="2.5" stroke="rgba(200,169,110,.06)" stroke-width=".6" fill="rgba(200,169,110,.02)"/>
+    <circle cx="140" cy="30" r="1.8" fill="rgba(200,169,110,.04)"/>
+  </svg>
+  <svg class="geo" style="bottom:62%;right:10px;width:140px;height:70px;transform:rotate(180deg)" viewBox="0 0 140 70" fill="none">
+    <circle cx="10"  cy="35" r="6"   stroke="rgba(200,169,110,.22)"  stroke-width="1.1" fill="rgba(200,169,110,.05)"/>
+    <circle cx="10"  cy="35" r="2.5" fill="rgba(200,169,110,.2)"/>
+    <circle cx="38"  cy="20" r="4.5" stroke="rgba(200,169,110,.16)" stroke-width=".9" fill="rgba(200,169,110,.03)"/>
+    <circle cx="66"  cy="44" r="4"   stroke="rgba(200,169,110,.12)" stroke-width=".8" fill="rgba(200,169,110,.03)"/>
+    <circle cx="94"  cy="22" r="3"   stroke="rgba(200,169,110,.08)" stroke-width=".7" fill="rgba(200,169,110,.02)"/>
+    <circle cx="120" cy="40" r="2.5" stroke="rgba(200,169,110,.06)" stroke-width=".6" fill="rgba(200,169,110,.02)"/>
+    <circle cx="140" cy="30" r="1.8" fill="rgba(200,169,110,.04)"/>
+  </svg>
 
-  <!-- ── RIGHT side decorations (y=x mirror of left) ── -->
+  <!-- A7: Star/asterisk at 62% down left side -->
+  <svg class="geo" style="top:66%;left:18px;width:34px;height:34px" viewBox="0 0 34 34" fill="none">
+    <line x1="17" y1="2"  x2="17" y2="32" stroke="rgba(200,169,110,.24)" stroke-width="1.1"/>
+    <line x1="2"  y1="17" x2="32" y2="17" stroke="rgba(200,169,110,.24)" stroke-width="1.1"/>
+    <line x1="5"  y1="5"  x2="29" y2="29" stroke="rgba(200,169,110,.15)" stroke-width=".85"/>
+    <line x1="29" y1="5"  x2="5"  y2="29" stroke="rgba(200,169,110,.15)" stroke-width=".85"/>
+    <circle cx="17" cy="17" r="3.5" stroke="rgba(200,169,110,.32)" stroke-width="1.1" fill="rgba(200,169,110,.08)"/>
+    <circle cx="17" cy="17" r="1.2" fill="rgba(200,169,110,.3)"/>
+  </svg>
+  <svg class="geo" style="bottom:66%;right:18px;width:34px;height:34px;transform:rotate(180deg)" viewBox="0 0 34 34" fill="none">
+    <line x1="17" y1="2"  x2="17" y2="32" stroke="rgba(200,169,110,.24)" stroke-width="1.1"/>
+    <line x1="2"  y1="17" x2="32" y2="17" stroke="rgba(200,169,110,.24)" stroke-width="1.1"/>
+    <line x1="5"  y1="5"  x2="29" y2="29" stroke="rgba(200,169,110,.15)" stroke-width=".85"/>
+    <line x1="29" y1="5"  x2="5"  y2="29" stroke="rgba(200,169,110,.15)" stroke-width=".85"/>
+    <circle cx="17" cy="17" r="3.5" stroke="rgba(200,169,110,.32)" stroke-width="1.1" fill="rgba(200,169,110,.08)"/>
+    <circle cx="17" cy="17" r="1.2" fill="rgba(200,169,110,.3)"/>
+  </svg>
 
-  <!-- Top-right arc bracket -->
-  <div class="arc-bracket" style="top:72px;right:0;opacity:.35;transform:scaleX(-1)">
-    <svg width="52" height="120" viewBox="0 0 52 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M48 4 Q8 4 8 60 Q8 116 48 116" stroke="rgba(200,169,110,.5)" stroke-width="1" fill="none"/>
-      <line x1="8" y1="60" x2="0" y2="60" stroke="rgba(200,169,110,.4)" stroke-width="1"/>
-      <circle cx="8" cy="4" r="2" fill="rgba(200,169,110,.35)"/>
-      <circle cx="8" cy="116" r="2" fill="rgba(200,169,110,.35)"/>
-      <circle cx="8" cy="60" r="1.5" fill="rgba(200,169,110,.5)"/>
-    </svg>
-  </div>
+  <!-- A8: Arc reaching dramatically from top-edge toward center at 20% height -->
+  <svg class="geo" style="top:10%;left:0;width:75vw;height:240px;max-width:920px" viewBox="0 0 920 240" fill="none" preserveAspectRatio="none">
+    <!-- Dramatic inward reach at ~50% across before retreating -->
+    <path d="M0 15 Q180 5 400 110 Q560 190 760 130 C860 100 910 78 920 72" stroke="rgba(200,169,110,.085)" stroke-width="1.2" fill="none"/>
+    <path d="M0 35 Q190 22 420 128 Q580 205 780 145 C875 115 915 92 920 88" stroke="rgba(200,169,110,.05)" stroke-width=".9" fill="none"/>
+    <circle cx="400" cy="110" r="3.5" fill="rgba(200,169,110,.19)"/>
+    <circle cx="760" cy="130" r="2.5" fill="rgba(200,169,110,.14)"/>
+    <circle cx="920" cy="72"  r="2.5" fill="rgba(200,169,110,.2)"/>
+  </svg>
+  <svg class="geo" style="bottom:10%;right:0;width:75vw;height:240px;max-width:920px;transform:rotate(180deg)" viewBox="0 0 920 240" fill="none" preserveAspectRatio="none">
+    <path d="M0 15 Q180 5 400 110 Q560 190 760 130 C860 100 910 78 920 72" stroke="rgba(200,169,110,.085)" stroke-width="1.2" fill="none"/>
+    <path d="M0 35 Q190 22 420 128 Q580 205 780 145 C875 115 915 92 920 88" stroke="rgba(200,169,110,.05)" stroke-width=".9" fill="none"/>
+    <circle cx="400" cy="110" r="3.5" fill="rgba(200,169,110,.19)"/>
+    <circle cx="760" cy="130" r="2.5" fill="rgba(200,169,110,.14)"/>
+    <circle cx="920" cy="72"  r="2.5" fill="rgba(200,169,110,.2)"/>
+  </svg>
 
-  <!-- Right waveform strip — upper -->
-  <div class="waveform waveform-right" style="bottom:56%;height:44px">
-    <div class="wbar" style="height:12px;animation-duration:1.8s;animation-delay:0s"></div>
-    <div class="wbar" style="height:28px;animation-duration:2.1s;animation-delay:.15s"></div>
-    <div class="wbar" style="height:40px;animation-duration:1.6s;animation-delay:.3s"></div>
-    <div class="wbar" style="height:22px;animation-duration:2.4s;animation-delay:.45s"></div>
-    <div class="wbar" style="height:34px;animation-duration:1.9s;animation-delay:.6s"></div>
-    <div class="wbar" style="height:18px;animation-duration:2.2s;animation-delay:.75s"></div>
-    <div class="wbar" style="height:44px;animation-duration:1.7s;animation-delay:.9s"></div>
-    <div class="wbar" style="height:26px;animation-duration:2.0s;animation-delay:1.05s"></div>
-  </div>
+  <!-- A9: Small scattered edge-shapes at bottom of TL zone -->
+  <svg class="geo" style="top:78%;left:30px;width:20px;height:20px" viewBox="0 0 20 20" fill="none">
+    <polygon points="10,1 19,10 10,19 1,10" stroke="rgba(200,169,110,.3)" stroke-width="1.1" fill="rgba(200,169,110,.07)"/>
+  </svg>
+  <svg class="geo" style="top:84%;left:8px;width:13px;height:13px" viewBox="0 0 13 13" fill="none">
+    <circle cx="6.5" cy="6.5" r="5.5" stroke="rgba(200,169,110,.22)" stroke-width=".9" fill="rgba(200,169,110,.05)"/>
+  </svg>
+  <svg class="geo" style="top:90%;left:46px;width:11px;height:11px" viewBox="0 0 11 11" fill="none">
+    <polygon points="5.5,0 11,5.5 5.5,11 0,5.5" stroke="rgba(200,169,110,.18)" stroke-width=".8" fill="rgba(200,169,110,.04)"/>
+  </svg>
+  <!-- A9 mirrors -->
+  <svg class="geo" style="bottom:78%;right:30px;width:20px;height:20px;transform:rotate(180deg)" viewBox="0 0 20 20" fill="none">
+    <polygon points="10,1 19,10 10,19 1,10" stroke="rgba(200,169,110,.3)" stroke-width="1.1" fill="rgba(200,169,110,.07)"/>
+  </svg>
+  <svg class="geo" style="bottom:84%;right:8px;width:13px;height:13px;transform:rotate(180deg)" viewBox="0 0 13 13" fill="none">
+    <circle cx="6.5" cy="6.5" r="5.5" stroke="rgba(200,169,110,.22)" stroke-width=".9" fill="rgba(200,169,110,.05)"/>
+  </svg>
+  <svg class="geo" style="bottom:90%;right:46px;width:11px;height:11px;transform:rotate(180deg)" viewBox="0 0 11 11" fill="none">
+    <polygon points="5.5,0 11,5.5 5.5,11 0,5.5" stroke="rgba(200,169,110,.18)" stroke-width=".8" fill="rgba(200,169,110,.04)"/>
+  </svg>
 
-  <!-- Right 1–10 rating scale — centered vertically -->
-  <div class="rating-scale rating-scale-right">
-    <div class="rtick"><div class="rtick-line"></div><span>10</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>9</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>8</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>7</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>6</span></div>
-    <div class="rtick"><div class="rtick-line"></div></div>
-    <div class="rtick"><div class="rtick-line"></div><span>5</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>4</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>3</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>2</span></div>
-    <div class="rtick"><div class="rtick-line"></div><span>1</span></div>
-  </div>
+  <!-- ═══ FAMILY B: TOP-RIGHT  ↔  BOTTOM-LEFT (y=x diagonal) ═══ -->
 
-  <!-- Right waveform strip — lower -->
-  <div class="waveform waveform-right" style="top:56%;height:36px">
-    <div class="wbar" style="height:36px;animation-duration:2.3s;animation-delay:.2s"></div>
-    <div class="wbar" style="height:20px;animation-duration:1.7s;animation-delay:.5s"></div>
-    <div class="wbar" style="height:30px;animation-duration:2.0s;animation-delay:.8s"></div>
-    <div class="wbar" style="height:14px;animation-duration:1.9s;animation-delay:1.1s"></div>
-    <div class="wbar" style="height:28px;animation-duration:2.2s;animation-delay:1.4s"></div>
-    <div class="wbar" style="height:36px;animation-duration:1.6s;animation-delay:.3s"></div>
-    <div class="wbar" style="height:16px;animation-duration:2.1s;animation-delay:.7s"></div>
-  </div>
+  <!-- B1: Concentric ring burst bleeding off TR corner -->
+  <svg class="geo" style="top:-40px;right:-80px;width:240px;height:240px;transform:scaleX(-1)" viewBox="0 0 240 240" fill="none">
+    <circle cx="160" cy="160" r="110" stroke="rgba(200,169,110,.12)" stroke-width="1.5"/>
+    <circle cx="160" cy="160" r="88"  stroke="rgba(200,169,110,.08)" stroke-width="1.2"/>
+    <circle cx="160" cy="160" r="66"  stroke="rgba(200,169,110,.055)" stroke-width="1"/>
+    <circle cx="160" cy="160" r="44"  stroke="rgba(200,169,110,.04)" stroke-width=".8"/>
+    <circle cx="270" cy="160" r="4.5" fill="rgba(200,169,110,.28)"/>
+    <circle cx="160" cy="270" r="3.5" fill="rgba(200,169,110,.2)"/>
+    <circle cx="84"  cy="236" r="3"   fill="rgba(200,169,110,.15)"/>
+  </svg>
+  <!-- B1 mirror: TR → BL -->
+  <svg class="geo" style="bottom:-40px;left:-80px;width:240px;height:240px;transform:rotate(180deg) scaleX(-1)" viewBox="0 0 240 240" fill="none">
+    <circle cx="160" cy="160" r="110" stroke="rgba(200,169,110,.12)" stroke-width="1.5"/>
+    <circle cx="160" cy="160" r="88"  stroke="rgba(200,169,110,.08)" stroke-width="1.2"/>
+    <circle cx="160" cy="160" r="66"  stroke="rgba(200,169,110,.055)" stroke-width="1"/>
+    <circle cx="160" cy="160" r="44"  stroke="rgba(200,169,110,.04)" stroke-width=".8"/>
+    <circle cx="270" cy="160" r="4.5" fill="rgba(200,169,110,.28)"/>
+    <circle cx="160" cy="270" r="3.5" fill="rgba(200,169,110,.2)"/>
+    <circle cx="84"  cy="236" r="3"   fill="rgba(200,169,110,.15)"/>
+  </svg>
 
-  <!-- Right freq dot column -->
-  <div class="freq-dots" style="right:8px;top:calc(72px + 130px);bottom:calc(8% + 20px)">
-    <div class="fdot" style="animation-duration:1.4s;animation-delay:0s"></div>
-    <div class="fdot" style="animation-duration:2.1s;animation-delay:.3s"></div>
-    <div class="fdot" style="animation-duration:1.7s;animation-delay:.6s"></div>
-    <div class="fdot" style="animation-duration:2.4s;animation-delay:.9s"></div>
-    <div class="fdot" style="animation-duration:1.6s;animation-delay:1.2s"></div>
-    <div class="fdot" style="animation-duration:1.9s;animation-delay:1.5s"></div>
-    <div class="fdot" style="animation-duration:2.2s;animation-delay:1.8s"></div>
-    <div class="fdot" style="animation-duration:1.5s;animation-delay:2.1s"></div>
-    <div class="fdot" style="animation-duration:2.0s;animation-delay:2.4s"></div>
-    <div class="fdot" style="animation-duration:1.8s;animation-delay:2.7s"></div>
-    <div class="fdot" style="animation-duration:1.3s;animation-delay:3.0s"></div>
-    <div class="fdot" style="animation-duration:2.3s;animation-delay:3.3s"></div>
-  </div>
+  <!-- B2: Fan of arcs from right edge, swooping deeply inward at mid-height -->
+  <svg class="geo" style="top:18%;right:0;width:78vw;height:260px;max-width:940px;transform:scaleX(-1)" viewBox="0 0 940 260" fill="none" preserveAspectRatio="none">
+    <path d="M0 130 Q260 30 480 100 Q640 152 820 108 C892 86 932 68 940 62" stroke="rgba(200,169,110,.1)" stroke-width="1.3" fill="none"/>
+    <path d="M0 150 Q270 55 500 122 Q660 172 840 126 C905 104 938 86 940 80" stroke="rgba(200,169,110,.06)" stroke-width="1" fill="none"/>
+    <path d="M0 168 Q280 78 520 142 Q680 190 860 144 C916 122 942 102 940 98" stroke="rgba(200,169,110,.035)" stroke-width=".8" fill="none"/>
+    <circle cx="480" cy="100" r="3.5" fill="rgba(200,169,110,.18)"/>
+    <circle cx="820" cy="108" r="2.5" fill="rgba(200,169,110,.14)"/>
+    <circle cx="260" cy="30"  r="2"   fill="rgba(200,169,110,.12)"/>
+    <circle cx="940" cy="62"  r="2.5" fill="rgba(200,169,110,.2)"/>
+  </svg>
+  <!-- B2 mirror: TR fan → BL fan -->
+  <svg class="geo" style="bottom:18%;left:0;width:78vw;height:260px;max-width:940px;transform:rotate(180deg) scaleX(-1)" viewBox="0 0 940 260" fill="none" preserveAspectRatio="none">
+    <path d="M0 130 Q260 30 480 100 Q640 152 820 108 C892 86 932 68 940 62" stroke="rgba(200,169,110,.1)" stroke-width="1.3" fill="none"/>
+    <path d="M0 150 Q270 55 500 122 Q660 172 840 126 C905 104 938 86 940 80" stroke="rgba(200,169,110,.06)" stroke-width="1" fill="none"/>
+    <path d="M0 168 Q280 78 520 142 Q680 190 860 144 C916 122 942 102 940 98" stroke="rgba(200,169,110,.035)" stroke-width=".8" fill="none"/>
+    <circle cx="480" cy="100" r="3.5" fill="rgba(200,169,110,.18)"/>
+    <circle cx="820" cy="108" r="2.5" fill="rgba(200,169,110,.14)"/>
+    <circle cx="940" cy="62"  r="2.5" fill="rgba(200,169,110,.2)"/>
+  </svg>
 
-  <!-- Right vertical dashed rule -->
-  <div class="vert-rule" style="right:28px;top:72px;bottom:calc(8% + 4px)"></div>
+  <!-- B3: Nested triangle cluster, TR side -->
+  <svg class="geo" style="top:12%;right:14px;width:72px;height:66px" viewBox="0 0 72 66" fill="none">
+    <polygon points="36,1 71,65 1,65"  stroke="rgba(200,169,110,.3)"  stroke-width="1.5" fill="rgba(200,169,110,.045)"/>
+    <polygon points="36,11 58,56 14,56" stroke="rgba(200,169,110,.16)" stroke-width="1.1" fill="rgba(200,169,110,.03)"/>
+    <polygon points="36,22 48,48 24,48" stroke="rgba(200,169,110,.09)" stroke-width=".9" fill="rgba(200,169,110,.04)"/>
+    <polygon points="36,32 42,43 30,43" stroke="rgba(200,169,110,.06)" stroke-width=".7" fill="rgba(200,169,110,.05)"/>
+    <circle cx="36" cy="44" r="2.5" fill="rgba(200,169,110,.22)"/>
+  </svg>
+  <!-- B3 mirror: TR → BL -->
+  <svg class="geo" style="bottom:12%;left:14px;width:72px;height:66px;transform:rotate(180deg)" viewBox="0 0 72 66" fill="none">
+    <polygon points="36,1 71,65 1,65"  stroke="rgba(200,169,110,.3)"  stroke-width="1.5" fill="rgba(200,169,110,.045)"/>
+    <polygon points="36,11 58,56 14,56" stroke="rgba(200,169,110,.16)" stroke-width="1.1" fill="rgba(200,169,110,.03)"/>
+    <polygon points="36,22 48,48 24,48" stroke="rgba(200,169,110,.09)" stroke-width=".9" fill="rgba(200,169,110,.04)"/>
+    <polygon points="36,32 42,43 30,43" stroke="rgba(200,169,110,.06)" stroke-width=".7" fill="rgba(200,169,110,.05)"/>
+    <circle cx="36" cy="44" r="2.5" fill="rgba(200,169,110,.22)"/>
+  </svg>
 
-  <!-- Bottom-right arc bracket -->
-  <div class="arc-bracket" style="bottom:calc(8% - 10px);right:0;opacity:.3;transform:scaleX(-1) scaleY(-1)">
-    <svg width="52" height="80" viewBox="0 0 52 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M48 4 Q8 4 8 40 Q8 76 48 76" stroke="rgba(200,169,110,.45)" stroke-width="1" fill="none"/>
-      <line x1="8" y1="40" x2="0" y2="40" stroke="rgba(200,169,110,.35)" stroke-width="1"/>
-      <circle cx="8" cy="4" r="2" fill="rgba(200,169,110,.3)"/>
-      <circle cx="8" cy="76" r="2" fill="rgba(200,169,110,.3)"/>
-    </svg>
-  </div>
+  <!-- B4: Crescent bracket on right edge, mid-upper -->
+  <svg class="geo" style="top:32%;right:0;width:88px;height:160px;transform:scaleX(-1)" viewBox="0 0 88 160" fill="none">
+    <path d="M82 5  C12 5  12 155 82 155" stroke="rgba(200,169,110,.2)"  stroke-width="1.6" fill="none"/>
+    <path d="M82 20 C34 20 34 140 82 140" stroke="rgba(200,169,110,.11)" stroke-width="1.1" fill="none"/>
+    <path d="M82 36 C52 36 52 124 82 124" stroke="rgba(200,169,110,.06)" stroke-width=".8"  fill="none"/>
+    <circle cx="82" cy="5"   r="3.5" fill="rgba(200,169,110,.3)"/>
+    <circle cx="82" cy="155" r="3.5" fill="rgba(200,169,110,.3)"/>
+    <circle cx="82" cy="80"  r="2.5" fill="rgba(200,169,110,.42)"/>
+    <circle cx="12" cy="80"  r="1.5" fill="rgba(200,169,110,.2)"/>
+  </svg>
+  <!-- B4 mirror: right → left -->
+  <svg class="geo" style="bottom:32%;left:0;width:88px;height:160px;transform:rotate(180deg) scaleX(-1)" viewBox="0 0 88 160" fill="none">
+    <path d="M82 5  C12 5  12 155 82 155" stroke="rgba(200,169,110,.2)"  stroke-width="1.6" fill="none"/>
+    <path d="M82 20 C34 20 34 140 82 140" stroke="rgba(200,169,110,.11)" stroke-width="1.1" fill="none"/>
+    <path d="M82 36 C52 36 52 124 82 124" stroke="rgba(200,169,110,.06)" stroke-width=".8"  fill="none"/>
+    <circle cx="82" cy="5"   r="3.5" fill="rgba(200,169,110,.3)"/>
+    <circle cx="82" cy="155" r="3.5" fill="rgba(200,169,110,.3)"/>
+    <circle cx="82" cy="80"  r="2.5" fill="rgba(200,169,110,.42)"/>
+    <circle cx="12" cy="80"  r="1.5" fill="rgba(200,169,110,.2)"/>
+  </svg>
+
+  <!-- B5: Angular shard cluster right side, reaching inward -->
+  <svg class="geo" style="top:42%;right:10px;width:100px;height:110px" viewBox="0 0 100 110" fill="none">
+    <polygon points="90,6 100,44 68,34"  stroke="rgba(200,169,110,.26)" stroke-width="1.3" fill="rgba(200,169,110,.04)"/>
+    <polygon points="78,38 100,76 56,64" stroke="rgba(200,169,110,.18)" stroke-width="1.1" fill="rgba(200,169,110,.03)"/>
+    <polygon points="62,68 90,104 40,100" stroke="rgba(200,169,110,.13)" stroke-width=".9" fill="rgba(200,169,110,.025)"/>
+    <polygon points="32,22 62,10 46,50"  stroke="rgba(200,169,110,.11)" stroke-width=".8" fill="rgba(200,169,110,.02)"/>
+    <circle cx="78" cy="38"  r="2.2" fill="rgba(200,169,110,.22)"/>
+    <circle cx="62" cy="68"  r="2"   fill="rgba(200,169,110,.18)"/>
+    <circle cx="100" cy="44" r="1.8" fill="rgba(200,169,110,.16)"/>
+  </svg>
+  <!-- B5 mirror: TR angular → BL -->
+  <svg class="geo" style="bottom:42%;left:10px;width:100px;height:110px;transform:rotate(180deg)" viewBox="0 0 100 110" fill="none">
+    <polygon points="90,6 100,44 68,34"  stroke="rgba(200,169,110,.26)" stroke-width="1.3" fill="rgba(200,169,110,.04)"/>
+    <polygon points="78,38 100,76 56,64" stroke="rgba(200,169,110,.18)" stroke-width="1.1" fill="rgba(200,169,110,.03)"/>
+    <polygon points="62,68 90,104 40,100" stroke="rgba(200,169,110,.13)" stroke-width=".9" fill="rgba(200,169,110,.025)"/>
+    <polygon points="32,22 62,10 46,50"  stroke="rgba(200,169,110,.11)" stroke-width=".8" fill="rgba(200,169,110,.02)"/>
+    <circle cx="78" cy="38"  r="2.2" fill="rgba(200,169,110,.22)"/>
+    <circle cx="62" cy="68"  r="2"   fill="rgba(200,169,110,.18)"/>
+  </svg>
+
+  <!-- B6: Long diagonal sweep from right edge, dramatic inward lunge then retract -->
+  <svg class="geo" style="top:50%;right:0;width:76vw;height:220px;max-width:900px;transform:scaleX(-1)" viewBox="0 0 900 220" fill="none" preserveAspectRatio="none">
+    <path d="M0 200 C140 178 320 92 520 58 C660 36 760 30 870 22 C895 20 910 18 900 16" stroke="rgba(200,169,110,.088)" stroke-width="1.2" fill="none"/>
+    <path d="M0 215 C150 194 340 112 540 80 C680 58 775 52 880 44 C902 42 912 40 900 38" stroke="rgba(200,169,110,.052)" stroke-width=".9" fill="none"/>
+    <circle cx="520" cy="58"  r="3.5" fill="rgba(200,169,110,.17)"/>
+    <circle cx="900" cy="16"  r="2.5" fill="rgba(200,169,110,.22)"/>
+    <circle cx="320" cy="92"  r="2"   fill="rgba(200,169,110,.13)"/>
+  </svg>
+  <!-- B6 mirror: TR diagonal → BL -->
+  <svg class="geo" style="bottom:50%;left:0;width:76vw;height:220px;max-width:900px;transform:rotate(180deg) scaleX(-1)" viewBox="0 0 900 220" fill="none" preserveAspectRatio="none">
+    <path d="M0 200 C140 178 320 92 520 58 C660 36 760 30 870 22 C895 20 910 18 900 16" stroke="rgba(200,169,110,.088)" stroke-width="1.2" fill="none"/>
+    <path d="M0 215 C150 194 340 112 540 80 C680 58 775 52 880 44 C902 42 912 40 900 38" stroke="rgba(200,169,110,.052)" stroke-width=".9" fill="none"/>
+    <circle cx="520" cy="58" r="3.5" fill="rgba(200,169,110,.17)"/>
+    <circle cx="900" cy="16" r="2.5" fill="rgba(200,169,110,.22)"/>
+  </svg>
+
+  <!-- B7: Pentagon on lower-right side -->
+  <svg class="geo" style="top:64%;right:16px;width:60px;height:60px" viewBox="0 0 60 60" fill="none">
+    <polygon points="30,2 58,22 48,52 12,52 2,22" stroke="rgba(200,169,110,.26)" stroke-width="1.4" fill="rgba(200,169,110,.038)"/>
+    <polygon points="30,10 46,26 40,46 20,46 14,26" stroke="rgba(200,169,110,.14)" stroke-width="1" fill="rgba(200,169,110,.026)"/>
+    <polygon points="30,18 38,30 34,40 26,40 22,30" stroke="rgba(200,169,110,.07)" stroke-width=".7" fill="none"/>
+    <circle cx="30" cy="32" r="2.8" fill="rgba(200,169,110,.2)"/>
+    <circle cx="30" cy="32" r="1"   fill="rgba(200,169,110,.35)"/>
+  </svg>
+  <!-- B7 mirror -->
+  <svg class="geo" style="bottom:64%;left:16px;width:60px;height:60px;transform:rotate(180deg)" viewBox="0 0 60 60" fill="none">
+    <polygon points="30,2 58,22 48,52 12,52 2,22" stroke="rgba(200,169,110,.26)" stroke-width="1.4" fill="rgba(200,169,110,.038)"/>
+    <polygon points="30,10 46,26 40,46 20,46 14,26" stroke="rgba(200,169,110,.14)" stroke-width="1" fill="rgba(200,169,110,.026)"/>
+    <polygon points="30,18 38,30 34,40 26,40 22,30" stroke="rgba(200,169,110,.07)" stroke-width=".7" fill="none"/>
+    <circle cx="30" cy="32" r="2.8" fill="rgba(200,169,110,.2)"/>
+    <circle cx="30" cy="32" r="1"   fill="rgba(200,169,110,.35)"/>
+  </svg>
+
+  <!-- B8: Scattered micro-shapes right side lower -->
+  <svg class="geo" style="top:75%;right:36px;width:20px;height:20px" viewBox="0 0 20 20" fill="none">
+    <polygon points="10,1 19,10 10,19 1,10" stroke="rgba(200,169,110,.28)" stroke-width="1" fill="rgba(200,169,110,.06)"/>
+  </svg>
+  <svg class="geo" style="top:81%;right:10px;width:13px;height:13px" viewBox="0 0 13 13" fill="none">
+    <circle cx="6.5" cy="6.5" r="5.5" stroke="rgba(200,169,110,.2)" stroke-width=".9" fill="rgba(200,169,110,.05)"/>
+  </svg>
+  <svg class="geo" style="top:87%;right:50px;width:11px;height:11px" viewBox="0 0 11 11" fill="none">
+    <polygon points="5.5,0 11,5.5 5.5,11 0,5.5" stroke="rgba(200,169,110,.17)" stroke-width=".8" fill="rgba(200,169,110,.04)"/>
+  </svg>
+  <!-- B8 mirrors -->
+  <svg class="geo" style="bottom:75%;left:36px;width:20px;height:20px;transform:rotate(180deg)" viewBox="0 0 20 20" fill="none">
+    <polygon points="10,1 19,10 10,19 1,10" stroke="rgba(200,169,110,.28)" stroke-width="1" fill="rgba(200,169,110,.06)"/>
+  </svg>
+  <svg class="geo" style="bottom:81%;left:10px;width:13px;height:13px;transform:rotate(180deg)" viewBox="0 0 13 13" fill="none">
+    <circle cx="6.5" cy="6.5" r="5.5" stroke="rgba(200,169,110,.2)" stroke-width=".9" fill="rgba(200,169,110,.05)"/>
+  </svg>
+  <svg class="geo" style="bottom:87%;left:50px;width:11px;height:11px;transform:rotate(180deg)" viewBox="0 0 11 11" fill="none">
+    <polygon points="5.5,0 11,5.5 5.5,11 0,5.5" stroke="rgba(200,169,110,.17)" stroke-width=".8" fill="rgba(200,169,110,.04)"/>
+  </svg>
 
   <div class="hero-content">
   <div class="eyebrow">Personal Music Rankings</div>
@@ -519,7 +693,18 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
       Start Rating
     </a>
   </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-num" id="stat-songs">—</span>
+      <span class="stat-label">Songs Rated</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="stat-users">—</span>
+      <span class="stat-label">Members</span>
+    </div>
   </div>
+  </div><!-- /hero-content -->
 
 
 </section>
@@ -542,6 +727,51 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
   }
   for(var i=0;i<6;i++) setTimeout(spawnNote, i*900);
   setInterval(spawnNote, 1400);
+})();
+</script>
+
+<script>
+// Fetch live stats from Supabase
+(function(){
+  var SUPA_URL = 'https://yomjjbcowxbwkghkqivk.supabase.co';
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvbWpqYmNvd3hid2tnaGtxaXZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5NTY0NjQsImV4cCI6MjA1OTUzMjQ2NH0.rl4hFMJOqFjDjSqxqaXVNHtxEY9R25F2PVOB0M5SRkk';
+
+  function fmt(n){
+    if(n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+    return String(n);
+  }
+
+  function animateCount(el, target){
+    var start = 0, dur = 1200, startTime = null;
+    function step(ts){
+      if(!startTime) startTime = ts;
+      var prog = Math.min((ts - startTime)/dur, 1);
+      var ease = 1 - Math.pow(1 - prog, 3);
+      el.textContent = fmt(Math.round(ease * target));
+      if(prog < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Songs count
+  fetch(SUPA_URL + '/rest/v1/ratings?select=id', {
+    headers:{'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY,
+             'Prefer': 'count=exact', 'Range': '0-0'}
+  }).then(function(r){
+    var ct = r.headers.get('content-range');
+    if(ct){ var n = parseInt(ct.split('/')[1]); if(!isNaN(n)){ animateCount(document.getElementById('stat-songs'), n); return; }}
+    document.getElementById('stat-songs').textContent = '—';
+  }).catch(function(){ document.getElementById('stat-songs').textContent = '—'; });
+
+  // Users count
+  fetch(SUPA_URL + '/rest/v1/users?select=id', {
+    headers:{'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY,
+             'Prefer': 'count=exact', 'Range': '0-0'}
+  }).then(function(r){
+    var ct = r.headers.get('content-range');
+    if(ct){ var n = parseInt(ct.split('/')[1]); if(!isNaN(n)){ animateCount(document.getElementById('stat-users'), n); return; }}
+    document.getElementById('stat-users').textContent = '—';
+  }).catch(function(){ document.getElementById('stat-users').textContent = '—'; });
 })();
 </script>
 
