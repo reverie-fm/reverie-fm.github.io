@@ -1650,14 +1650,93 @@ function _renderFeedCard(item, username) {
   </div>`;
 }
 
+// ── Community realtime subscription ────────────────────────────
+let _communityRealtimeChannel = null;
+
+function _startCommunityRealtime() {
+  if (_communityRealtimeChannel) return; // already subscribed
+  _communityRealtimeChannel = _sb
+    .channel('community-ratings-feed')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'ratings' }, async (payload) => {
+      // Re-fetch all ratings to keep cache fresh, then re-render feed only
+      await _fetchAllRatings();
+      if (communityView === 'list') {
+        _renderCommunityFeed();
+      }
+    })
+    .subscribe();
+}
+
+function _stopCommunityRealtime() {
+  if (_communityRealtimeChannel) {
+    _sb.removeChannel(_communityRealtimeChannel);
+    _communityRealtimeChannel = null;
+  }
+}
+
+// Render only the feed (left column) without touching the users/search column
+function _renderCommunityFeed() {
+  const feedEl = document.getElementById('communityFeedContainer');
+  if (!feedEl) return;
+  const allItems = [];
+  Object.entries(_communityRatingsCache).forEach(([uname, items]) => {
+    items.forEach(item => allItems.push({ item, username: uname }));
+  });
+  allItems.sort((a, b) => (b.item.ratedAt || 0) - (a.item.ratedAt || 0));
+  const feedSlice = allItems.slice(0, communityFeedLimit);
+  const feedHTML = feedSlice.map(({ item, username }) => _renderFeedCard(item, username)).join('');
+  const hasMore = allItems.length > communityFeedLimit;
+  feedEl.innerHTML = feedHTML
+    || '<div class="empty-state" style="padding:2rem"><div class="empty-icon">🌐</div><div class="empty-text">No ratings yet.</div></div>';
+  if (hasMore) {
+    const btn = document.createElement('button');
+    btn.className = 'feed-load-more';
+    btn.textContent = 'Show more';
+    btn.onclick = () => { communityFeedLimit += 20; _renderCommunityFeed(); };
+    feedEl.appendChild(btn);
+  }
+}
+
+// Render only the users list (right column) without touching feed or losing focus
+function _renderCommunityUsers() {
+  const usersEl = document.getElementById('communityUsersContainer');
+  if (!usersEl) return;
+  const usernames = getAllUsernames();
+  const otherUsernames = usernames.filter(u => _profilesCache?.[u]?.id !== _currentUserId);
+  const q = communitySearch.toLowerCase();
+  const filtered = q ? otherUsernames.filter(u => u.toLowerCase().includes(q)) : otherUsernames;
+  const memberCards = filtered.map(u => {
+    const s = getUserStats(u);
+    const avgStr = s.count ? s.avg.toFixed(1) : '—';
+    const avatarUrl = _profilesCache?.[u]?.avatar_url;
+    const avatarInner = avatarUrl
+      ? `<img src="${esc(avatarUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" onerror="this.parentElement.innerHTML='${u[0].toUpperCase()}'">` 
+      : u[0].toUpperCase();
+    return `<div class="user-card" onclick="openUserProfile('${esc(u)}')">
+      <div class="user-card-avatar">${avatarInner}</div>
+      <div class="user-card-info">
+        <div class="user-card-name">${esc(u)}</div>
+        <div class="user-card-stats">
+          <span class="user-card-stat">🎵 ${s.count} rated</span>
+          <span class="user-card-stat">⭐ ${avgStr} avg</span>
+        </div>
+      </div>
+      <div class="user-card-arrow">›</div>
+    </div>`;
+  }).join('');
+  usersEl.innerHTML = filtered.length
+    ? memberCards
+    : `<div class="no-results">No users match "<strong>${esc(q)}</strong>"</div>`;
+}
+
 function renderCommunity() {
   const el = document.getElementById('communityContent');
   if (communityView === 'profile' && communityProfileUser) {
+    _stopCommunityRealtime();
     renderUserProfile(el, communityProfileUser);
     return;
   }
   communityView = 'list';
-  const currentUser = getSession();
 
   el.innerHTML = `<div class="empty-state"><span class="loading-ring" style="width:22px;height:22px;border-width:2.5px;opacity:.7"></span></div>`;
 
@@ -1669,48 +1748,12 @@ function renderCommunity() {
       return;
     }
 
-    // Flat recent feed sorted by ratedAt desc
-    const allItems = [];
-    Object.entries(_communityRatingsCache).forEach(([uname, items]) => {
-      items.forEach(item => allItems.push({ item, username: uname }));
-    });
-    allItems.sort((a, b) => (b.item.ratedAt || 0) - (a.item.ratedAt || 0));
-    const feedSlice = allItems.slice(0, communityFeedLimit);
-    const feedHTML = feedSlice.map(({ item, username }) => _renderFeedCard(item, username)).join('');
-    const hasMore = allItems.length > communityFeedLimit;
-
-    // Users list — exclude self by ID, filtered by search
-    const otherUsernames = usernames.filter(u => _profilesCache?.[u]?.id !== _currentUserId);
-    const q = communitySearch.toLowerCase();
-    const filtered = q ? otherUsernames.filter(u => u.toLowerCase().includes(q)) : otherUsernames;
-    const memberCards = filtered.map(u => {
-      const s = getUserStats(u);
-      const avgStr = s.count ? s.avg.toFixed(1) : '—';
-      const avatarUrl = _profilesCache?.[u]?.avatar_url;
-      const avatarInner = avatarUrl
-        ? `<img src="${esc(avatarUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" onerror="this.parentElement.innerHTML='${u[0].toUpperCase()}'">` 
-        : u[0].toUpperCase();
-      return `<div class="user-card" onclick="openUserProfile('${esc(u)}')">
-        <div class="user-card-avatar">${avatarInner}</div>
-        <div class="user-card-info">
-          <div class="user-card-name">${esc(u)}</div>
-          <div class="user-card-stats">
-            <span class="user-card-stat">🎵 ${s.count} rated</span>
-            <span class="user-card-stat">⭐ ${avgStr} avg</span>
-          </div>
-        </div>
-        <div class="user-card-arrow">›</div>
-      </div>`;
-    }).join('');
-
+    // Build stable layout shell with named containers
     el.innerHTML = `
       <div class="community-layout">
         <div>
           <div class="community-col-title">Recent Ratings</div>
-          <div class="recent-feed">
-            ${feedHTML || '<div class="empty-state" style="padding:2rem"><div class="empty-icon">🌐</div><div class="empty-text">No ratings yet.</div></div>'}
-            ${hasMore ? `<button class="feed-load-more" onclick="communityFeedLimit+=20;renderCommunity()">Show more</button>` : ''}
-          </div>
+          <div class="recent-feed" id="communityFeedContainer"></div>
         </div>
         <div>
           <div class="community-col-title">Users</div>
@@ -1721,19 +1764,19 @@ function renderCommunity() {
                 value="${esc(communitySearch)}" oninput="onCommunitySearch(this)">
             </div>
           </div>
-          ${filtered.length ? memberCards : `<div class="no-results">No users match "<strong>${esc(q)}</strong>"</div>`}
+          <div id="communityUsersContainer"></div>
         </div>
       </div>`;
+
+    _renderCommunityFeed();
+    _renderCommunityUsers();
+    _startCommunityRealtime();
   });
 }
 
 function onCommunitySearch(el) {
   communitySearch = el.value;
-  renderCommunity();
-  setTimeout(() => {
-    const inp = document.getElementById('communitySearchInput');
-    if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
-  }, 0);
+  _renderCommunityUsers();
 }
 
 function openUserProfile(username) {
@@ -2477,6 +2520,7 @@ function switchTab(t) {
       if (el) el.style.display = t === id ? 'block' : 'none';
     }
   });
+  if (t !== 'community') _stopCommunityRealtime();
   if (t === 'rankings') renderRankings();
   if (t === 'albums') renderAlbums();
   if (t === 'stats') renderStats();
