@@ -1125,7 +1125,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
           </div>
           <div class="setup-field">
             <div class="setup-label">New password</div>
-            <input class="setup-input" id="newPassword" type="password" placeholder="At least 4 characters" oninput="clearPwStatus()">
+            <input class="setup-input" id="newPassword" type="password" placeholder="At least 6 characters" oninput="clearPwStatus()">
           </div>
         </div>
         <div class="setup-actions">
@@ -1520,7 +1520,7 @@ async function doRegister() {
   errEl.textContent = '';
   if (!username || !password) { errEl.textContent = 'Please fill in all fields.'; return; }
   if (!/^[a-z0-9_]{2,20}$/.test(username)) { errEl.textContent = 'Username: 2–20 chars, letters/numbers/underscore only.'; return; }
-  if (password.length < 4) { errEl.textContent = 'Password must be at least 4 characters.'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
   if (password !== password2) { errEl.textContent = 'Passwords do not match.'; return; }
 
   // Check username taken
@@ -2068,7 +2068,7 @@ async function changeOwnPassword() {
   const cur = document.getElementById('curPassword').value;
   const nw = document.getElementById('newPassword').value;
   if (!cur || !nw) { setPwStatus('Fill in both fields', false); return; }
-  if (nw.length < 4) { setPwStatus('New password too short', false); return; }
+  if (nw.length < 6) { setPwStatus('New password must be at least 6 characters', false); return; }
 
   // Re-authenticate with current password to verify it
   const email = username + '@reverie-app.com';
@@ -2125,7 +2125,7 @@ async function adminEditUser() {
   if (newUsername && !/^[a-z0-9_]{2,20}$/.test(newUsername)) {
     setAdminStatus('Username: 2–20 chars, letters/numbers/underscore', false); return;
   }
-  if (newPassword && newPassword.length < 4) { setAdminStatus('Password must be at least 4 characters', false); return; }
+  if (newPassword && newPassword.length < 6) { setAdminStatus('Password must be at least 6 characters', false); return; }
   const profile = _profilesCache?.[target];
   if (!profile) { setAdminStatus('User not found', false); return; }
 
@@ -3738,7 +3738,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       </div>
       <div class="login-field">
         <div class="login-label">Password</div>
-        <input class="login-input" id="regPassword" type="password" placeholder="At least 4 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
+        <input class="login-input" id="regPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
       </div>
       <div class="login-field">
         <div class="login-label">Confirm Password</div>
