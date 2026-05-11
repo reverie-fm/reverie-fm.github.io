@@ -764,7 +764,7 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
   }).catch(function(){ document.getElementById('stat-songs').textContent = '—'; });
 
   // Users count
-  fetch(SUPA_URL + '/rest/v1/users?select=id', {
+  fetch(SUPA_URL + '/rest/v1/profiles?select=id', {
     headers:{'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY,
              'Prefer': 'count=exact', 'Range': '0-0'}
   }).then(function(r){
