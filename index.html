@@ -119,19 +119,15 @@ nav{
   100%{opacity:0;transform:translateY(-360px) rotate(20deg) scale(1.15)}
 }
 
-/* Side stat pills */
-.hero-side-stat{position:absolute;top:50%;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
-.hero-side-stat.left{left:2.5rem;transform:translateY(-50%);align-items:flex-start}
-.hero-side-stat.right{right:2.5rem;transform:translateY(-50%);align-items:flex-end}
-.stat-pill{
-  display:flex;align-items:center;gap:.55rem;padding:.45rem 1rem;
-  background:rgba(255,255,255,.025);border:1px solid rgba(200,169,110,.09);border-radius:40px;
-  font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.05em;
-  opacity:0;animation:fadeInPill .7s ease forwards;white-space:nowrap;
-}
-.stat-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:.65;flex-shrink:0}
-@keyframes fadeInPill{to{opacity:1}}
-@media(max-width:960px){.hero-side-stat{display:none}}
+/* Side waveform bars */
+.hero-waveform{position:absolute;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:3px;pointer-events:none}
+.hero-waveform.left{left:2.8rem}
+.hero-waveform.right{right:2.8rem}
+.wbar{width:2px;border-radius:2px;background:var(--accent);opacity:.18;animation:wavePulse ease-in-out infinite alternate}
+@keyframes wavePulse{0%{transform:scaleY(.3);opacity:.1}100%{transform:scaleY(1);opacity:.28}}
+/* Scattered vinyl grooves */
+.groove-line{position:absolute;border-radius:50%;border:1px solid rgba(200,169,110,.06);pointer-events:none}
+@media(max-width:960px){.hero-waveform{display:none}}
 
 .eyebrow{font-family:'DM Mono',monospace;font-size:.67rem;text-transform:uppercase;letter-spacing:.22em;color:var(--accent);margin-bottom:1.75rem;opacity:.65;animation:fadeUp .5s .05s ease both}
 .hero-title{font-family:'Playfair Display',serif;font-size:clamp(3.5rem,9.5vw,7rem);line-height:1.02;letter-spacing:-.03em;margin-bottom:1.4rem;animation:fadeUp .55s .12s ease both}
@@ -265,19 +261,16 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
   <div class="vinyl-ring2"></div>
   <div class="vinyl-ring3"></div>
 
-  <!-- Side stat pills -->
-  <div class="hero-side-stat left">
-    <div class="stat-pill" style="animation-delay:.4s"><span class="stat-dot"></span>Rate 1 to 10</div>
-    <div class="stat-pill" style="animation-delay:.6s"><span class="stat-dot"></span>Spotify search</div>
-    <div class="stat-pill" style="animation-delay:.8s"><span class="stat-dot"></span>Cloud synced</div>
-    <div class="stat-pill" style="animation-delay:1s"><span class="stat-dot"></span>Album view</div>
-  </div>
-  <div class="hero-side-stat right">
-    <div class="stat-pill" style="animation-delay:.5s"><span class="stat-dot"></span>Stats &amp; trends</div>
-    <div class="stat-pill" style="animation-delay:.7s"><span class="stat-dot"></span>Community feed</div>
-    <div class="stat-pill" style="animation-delay:.9s"><span class="stat-dot"></span>Score distribution</div>
-    <div class="stat-pill" style="animation-delay:1.1s"><span class="stat-dot"></span>Top artists</div>
-  </div>
+  <!-- Waveform bars left -->
+  <div class="hero-waveform left" id="waveL"></div>
+  <!-- Waveform bars right -->
+  <div class="hero-waveform right" id="waveR"></div>
+
+  <!-- Groove arcs top-left and bottom-right mirrored -->
+  <div class="groove-line" style="width:260px;height:260px;top:12%;left:-60px"></div>
+  <div class="groove-line" style="width:180px;height:180px;top:18%;left:-20px;border-color:rgba(200,169,110,.04)"></div>
+  <div class="groove-line" style="width:260px;height:260px;bottom:12%;right:-60px"></div>
+  <div class="groove-line" style="width:180px;height:180px;bottom:18%;right:-20px;border-color:rgba(200,169,110,.04)"></div>
 
   <div class="eyebrow">Personal Music Rankings</div>
   <h1 class="hero-title">
@@ -295,6 +288,22 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
 
 </section>
 
+<script>
+// Waveform bars
+(function(){
+  var heights = [18,28,44,60,80,96,110,96,80,60,44,28,18,24,40,56,72,88,72,56,40,24,18,30,50,70,90,70,50,30,18];
+  ['waveL','waveR'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    heights.forEach(function(h,i){
+      var b = document.createElement('div');
+      b.className = 'wbar';
+      b.style.cssText = 'height:'+h+'px;animation-duration:'+(0.8+Math.random()*1.2)+'s;animation-delay:'+(i*0.06)+'s';
+      el.appendChild(b);
+    });
+  });
+})();
+</script>
 <script>
 // Floating music notes
 (function(){
