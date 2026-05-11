@@ -1650,28 +1650,24 @@ function _renderFeedCard(item, username) {
   </div>`;
 }
 
-// ── Community realtime subscription ────────────────────────────
-let _communityRealtimeChannel = null;
+// ── Community live feed (polling + realtime) ───────────────────
+let _communityPollInterval = null;
+
+async function _communityLiveTick() {
+  if (communityView !== 'list') return;
+  try {
+    await _fetchAllRatings();
+    _renderCommunityFeed();
+  } catch(e) {}
+}
 
 function _startCommunityRealtime() {
-  if (_communityRealtimeChannel) return; // already subscribed
-  _communityRealtimeChannel = _sb
-    .channel('community-ratings-feed')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'ratings' }, async (payload) => {
-      // Re-fetch all ratings to keep cache fresh, then re-render feed only
-      await _fetchAllRatings();
-      if (communityView === 'list') {
-        _renderCommunityFeed();
-      }
-    })
-    .subscribe();
+  if (_communityPollInterval) return;
+  _communityPollInterval = setInterval(_communityLiveTick, 5000);
 }
 
 function _stopCommunityRealtime() {
-  if (_communityRealtimeChannel) {
-    _sb.removeChannel(_communityRealtimeChannel);
-    _communityRealtimeChannel = null;
-  }
+  if (_communityPollInterval) { clearInterval(_communityPollInterval); _communityPollInterval = null; }
 }
 
 // Render only the feed (left column) without touching the users/search column
