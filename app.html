@@ -1155,6 +1155,10 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
               <div class="setup-label">New username</div>
               <input class="setup-input" id="adminNewUsername" type="text" placeholder="Leave blank to keep" oninput="clearAdminStatus()">
             </div>
+            <div class="setup-field">
+              <div class="setup-label">New password</div>
+              <input class="setup-input" id="adminNewPassword" type="password" placeholder="Leave blank to keep" oninput="clearAdminStatus()">
+            </div>
 
           </div>
           <div class="setup-actions">
@@ -2116,17 +2120,39 @@ async function adminEditUser() {
   const target = targetSel.value;
   if (!target) { setAdminStatus('Select a user first', false); return; }
   const newUsername = document.getElementById('adminNewUsername').value.trim().toLowerCase();
-  if (!newUsername) { setAdminStatus('Enter a new username', false); return; }
-  if (!/^[a-z0-9_]{2,20}$/.test(newUsername)) {
+  const newPassword = document.getElementById('adminNewPassword').value;
+  if (!newUsername && !newPassword) { setAdminStatus('Enter a new username or password', false); return; }
+  if (newUsername && !/^[a-z0-9_]{2,20}$/.test(newUsername)) {
     setAdminStatus('Username: 2–20 chars, letters/numbers/underscore', false); return;
   }
+  if (newPassword && newPassword.length < 4) { setAdminStatus('Password must be at least 4 characters', false); return; }
   const profile = _profilesCache?.[target];
   if (!profile) { setAdminStatus('User not found', false); return; }
 
-  if (newUsername !== target) {
+  // Update username + email in one edge function call
+  if (newUsername && newUsername !== target) {
     if (_profilesCache?.[newUsername]) { setAdminStatus('That username is already taken', false); return; }
+    const newEmail = `${newUsername}@reverie-app.com`;
+    const { data: { session } } = await _sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-update-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ targetUserId: profile.id, newEmail, newPassword: newPassword || undefined })
+    });
+    const json = await res.json();
+    if (!res.ok || json.error) { setAdminStatus('Error: ' + (json.error || res.status), false); return; }
     const { error } = await _sb.from('profiles').update({ username: newUsername }).eq('id', profile.id);
-    if (error) { setAdminStatus('Error: ' + error.message, false); return; }
+    if (error) { setAdminStatus('Error updating username: ' + error.message, false); return; }
+  } else if (newPassword) {
+    // Password only, no username change
+    const { data: { session } } = await _sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-update-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ targetUserId: profile.id, newPassword })
+    });
+    const json = await res.json();
+    if (!res.ok || json.error) { setAdminStatus('Error: ' + (json.error || res.status), false); return; }
   }
 
   setAdminStatus('✓ Changes saved', true);
@@ -2136,6 +2162,7 @@ async function adminEditUser() {
     populateAdminUserList();
     targetSel.value = '';
     document.getElementById('adminNewUsername').value = '';
+    document.getElementById('adminNewPassword').value = '';
   }, 2000);
 }
 
