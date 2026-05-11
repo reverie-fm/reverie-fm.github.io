@@ -119,15 +119,8 @@ nav{
   100%{opacity:0;transform:translateY(-360px) rotate(20deg) scale(1.15)}
 }
 
-/* Side waveform bars */
-.hero-waveform{position:absolute;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:3px;pointer-events:none}
-.hero-waveform.left{left:2.8rem}
-.hero-waveform.right{right:2.8rem}
-.wbar{width:2px;border-radius:2px;background:var(--accent);opacity:.18;animation:wavePulse ease-in-out infinite alternate}
-@keyframes wavePulse{0%{transform:scaleY(.3);opacity:.1}100%{transform:scaleY(1);opacity:.28}}
 /* Scattered vinyl grooves */
 .groove-line{position:absolute;border-radius:50%;border:1px solid rgba(200,169,110,.06);pointer-events:none}
-@media(max-width:960px){.hero-waveform{display:none}}
 
 .eyebrow{font-family:'DM Mono',monospace;font-size:.67rem;text-transform:uppercase;letter-spacing:.22em;color:var(--accent);margin-bottom:1.75rem;opacity:.65;animation:fadeUp .5s .05s ease both}
 .hero-title{font-family:'Playfair Display',serif;font-size:clamp(3.5rem,9.5vw,7rem);line-height:1.02;letter-spacing:-.03em;margin-bottom:1.4rem;animation:fadeUp .55s .12s ease both}
@@ -261,11 +254,6 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
   <div class="vinyl-ring2"></div>
   <div class="vinyl-ring3"></div>
 
-  <!-- Waveform bars left -->
-  <div class="hero-waveform left" id="waveL"></div>
-  <!-- Waveform bars right -->
-  <div class="hero-waveform right" id="waveR"></div>
-
   <!-- Groove arcs top-left and bottom-right mirrored -->
   <div class="groove-line" style="width:260px;height:260px;top:12%;left:-60px"></div>
   <div class="groove-line" style="width:180px;height:180px;top:18%;left:-20px;border-color:rgba(200,169,110,.04)"></div>
@@ -288,22 +276,6 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
 
 </section>
 
-<script>
-// Waveform bars
-(function(){
-  var heights = [18,28,44,60,80,96,110,96,80,60,44,28,18,24,40,56,72,88,72,56,40,24,18,30,50,70,90,70,50,30,18];
-  ['waveL','waveR'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(!el) return;
-    heights.forEach(function(h,i){
-      var b = document.createElement('div');
-      b.className = 'wbar';
-      b.style.cssText = 'height:'+h+'px;animation-duration:'+(0.8+Math.random()*1.2)+'s;animation-delay:'+(i*0.06)+'s';
-      el.appendChild(b);
-    });
-  });
-})();
-</script>
 <script>
 // Floating music notes
 (function(){
