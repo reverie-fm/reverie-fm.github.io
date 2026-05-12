@@ -281,10 +281,80 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
 .feat:nth-child(2){transition-delay:.08s}.feat:nth-child(3){transition-delay:.16s}
 .feat:nth-child(4){transition-delay:.08s}.feat:nth-child(5){transition-delay:.16s}.feat:nth-child(6){transition-delay:.24s}
 
-@media(max-width:540px){
-  nav{padding:.75rem 1.25rem}
-  .demo-cards{display:none}
-  .hero-title{font-size:clamp(3rem,14vw,5rem)}
+/* ═══════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ═══════════════════════════════════════════ */
+
+/* ── Tablet / large phone (541–780px) ── */
+@media (max-width: 780px) {
+  .feat-grid { grid-template-columns: 1fr 1fr; }
+  .steps { grid-template-columns: 1fr 1fr; gap: 1rem; }
+}
+
+/* ── Phone (≤ 540px) ── */
+@media (max-width: 540px) {
+
+  /* Nav */
+  nav { padding: .75rem 1.1rem; }
+  .nav-logo { font-size: 1rem; }
+
+  /* Hero */
+  .hero { padding: 6rem 1.1rem 3.5rem; min-height: unset; }
+  .hero-title { font-size: clamp(2.8rem, 13vw, 4.5rem); }
+  .hero-sub { font-size: .85rem; max-width: 100%; }
+  .hero-disc,
+  .vinyl-ring,
+  .vinyl-ring2 { width: min(240px, 62vw); height: min(240px, 62vw); }
+  .vinyl-ring3 { display: none; }
+
+  /* Hide decorative geo shapes on mobile — they overflow/clip badly */
+  .geo { display: none; }
+  .groove-line { display: none; }
+
+  /* Demo cards */
+  .demo-cards { display: none; }
+
+  /* Hero stats */
+  .hero-stats { gap: 1.25rem; margin-top: 1.5rem; }
+  .stat-num { font-size: 1.25rem; }
+  .stat-label { font-size: .52rem; }
+
+  /* CTA buttons */
+  .hero-actions { flex-direction: column; align-items: stretch; gap: .6rem; }
+  .btn-primary,
+  .btn-ghost { width: 100%; justify-content: center; padding: .85rem 1.25rem; }
+
+  /* Marquee */
+  .marquee-wrap { padding: 1.25rem 0; }
+  .marquee-item { font-size: .65rem; }
+
+  /* Features section */
+  .features { padding: 3rem 1.1rem 4rem; }
+  .feat-grid { grid-template-columns: 1fr; }
+  .feat { padding: 1.25rem; }
+
+  /* How it works */
+  .how-section { padding: 3rem 1.1rem 4rem; }
+  .steps { grid-template-columns: 1fr; gap: .85rem; }
+  .step { padding: 1.25rem; }
+  .step-num { font-size: 1.8rem; }
+
+  /* CTA strip */
+  .cta-strip { padding: 3rem 1.1rem 4rem; }
+  .cta-strip-title { font-size: clamp(1.6rem, 8vw, 2.4rem); }
+  .cta-strip-sub { font-size: .84rem; }
+  div[style*="display:flex;gap:.85rem"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .btn-primary[href^="mailto"],
+  .btn-ghost { justify-content: center; width: 100%; }
+
+  /* Footer */
+  footer { font-size: .55rem; padding: 1.5rem 1rem 2rem; }
+
+  /* Section dividers */
+  .section-divider { margin-bottom: 2rem; }
 }
 </style>
 </head>
