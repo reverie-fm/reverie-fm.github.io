@@ -1385,7 +1385,7 @@ async function _loadAllProfiles() {
 }
 
 function getAllUsernames() {
-  return _profilesCache ? Object.keys(_profilesCache) : [];
+  return _profilesCache ? Object.keys(_profilesCache).sort((a, b) => a.localeCompare(b)) : [];
 }
 
 function getUsers() {
@@ -2276,12 +2276,15 @@ async function adminEditUser() {
   // Update username + email in one edge function call
   if (newUsername && newUsername !== target) {
     if (_profilesCache?.[newUsername]) { setAdminStatus('That username is already taken', false); return; }
-    const newEmail = `${newUsername}@reverie-app.com`;
     const { data: { session } } = await _sb.auth.getSession();
+    // Only update auth email when also changing password (forces re-login anyway).
+    // Changing auth email alone kills the user's active session/JWT — avoid it.
+    const edgePayload = { targetUserId: profile.id, newUsername, newPassword: newPassword || undefined };
+    if (newPassword) edgePayload.newEmail = `${newUsername}@reverie-app.com`;
     const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-update-user`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-      body: JSON.stringify({ targetUserId: profile.id, newEmail, newUsername, newPassword: newPassword || undefined })
+      body: JSON.stringify(edgePayload)
     });
     const json = await res.json();
     if (!res.ok || json.error) { setAdminStatus('Error: ' + (json.error || res.status), false); return; }
@@ -3837,8 +3840,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (session?.user) {
     _currentUserId = session.user.id;
     const { data: profile } = await _sb.from('profiles').select('*').eq('id', _currentUserId).maybeSingle();
-    // Username: prefer cached value, fall back to profile row
-    const savedUsername = _loadSavedSession()?.username || profile?.username;
+    // Always use fresh DB profile username — never trust stale localStorage
+    const savedUsername = profile?.username || _loadSavedSession()?.username;
     if (savedUsername) {
       _currentUsername = savedUsername;
       _saveSession(_currentUserId, _currentUsername); // keep username cache fresh
