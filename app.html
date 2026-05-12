@@ -2190,6 +2190,20 @@ async function adminEditUser() {
     if (!res.ok || json.error) { setAdminStatus('Error: ' + (json.error || res.status), false); return; }
     const { error } = await _sb.from('profiles').update({ username: newUsername }).eq('id', profile.id);
     if (error) { setAdminStatus('Error updating username: ' + error.message, false); return; }
+    // Re-key the community ratings cache so ratings still appear under the new username
+    if (_communityRatingsCache[target]) {
+      _communityRatingsCache[newUsername] = _communityRatingsCache[target];
+      delete _communityRatingsCache[target];
+    }
+    // If the admin is renaming their own account, update the live session username
+    if (_currentUsername === target) {
+      _currentUsername = newUsername;
+      const uBarName = document.getElementById('userBarName');
+      if (uBarName) uBarName.innerHTML = newUsername + (_isAdmin ? ' <span>admin</span>' : '');
+      const uBarLetter = document.getElementById('userBarLetter');
+      if (uBarLetter) uBarLetter.textContent = newUsername[0].toUpperCase();
+      _saveSession(_currentUserId, newUsername);
+    }
   } else if (newPassword) {
     // Password only, no username change
     const { data: { session } } = await _sb.auth.getSession();
