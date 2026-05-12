@@ -2319,7 +2319,11 @@ async function adminEditUser() {
   }
 
   setAdminStatus('✓ Changes saved', true);
-  await _loadAllProfiles();
+  // Reload profiles AND ratings so every username reference in the UI is up to date
+  await Promise.all([_loadAllProfiles(), _fetchAllRatings()]);
+  // Re-render every tab that shows usernames
+  renderCommunity();
+  renderStats();
   setTimeout(() => {
     clearAdminStatus();
     populateAdminUserList();
