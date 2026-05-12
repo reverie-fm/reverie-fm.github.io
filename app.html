@@ -25,7 +25,7 @@
   --green:#5dba7a;
   --blue:#7a7a72;
 }
-html{min-height:100vh;overflow-y:scroll;scrollbar-gutter:stable}
+html{min-height:100vh;overflow-y:scroll;overflow-x:hidden;scrollbar-gutter:stable}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;min-height:100vh}
 
 /* ── Page fade-in overlay ── */
@@ -261,7 +261,7 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .filter-panel-title{font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;
   letter-spacing:.14em;color:var(--accent);opacity:.7;margin-bottom:.85rem}
 /* ── Dual-handle range slider ── */
-.dual-range-wrap{position:relative;height:28px;margin-bottom:.5rem}
+.dual-range-wrap{position:relative;height:44px;margin-bottom:.5rem;margin-top:1.5rem}
 .dual-range-track{
   position:absolute;top:50%;left:0;right:0;
   height:5px;border-radius:3px;
@@ -272,6 +272,16 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   position:absolute;top:50%;height:5px;border-radius:3px;
   background:var(--accent);transform:translateY(-50%);
   pointer-events:none;
+}
+/* floating labels above each thumb */
+.dual-thumb-label{
+  position:absolute;top:-1.6rem;
+  transform:translateX(-50%);
+  font-family:'DM Mono',monospace;font-size:.68rem;
+  color:var(--accent2);background:var(--surface2);
+  border:1px solid var(--border2);border-radius:5px;
+  padding:.1rem .32rem;pointer-events:none;white-space:nowrap;
+  transition:left .05s;
 }
 .dual-range-input{
   position:absolute;top:50%;width:100%;
@@ -295,13 +305,6 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   box-shadow:0 0 0 3px rgba(200,169,110,.25);
   cursor:pointer;pointer-events:auto;
 }
-.dual-range-labels{display:flex;justify-content:space-between;
-  font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);margin-bottom:.85rem;opacity:.6}
-.filter-range-readout{
-  text-align:center;font-family:'Playfair Display',serif;font-size:1rem;
-  color:var(--accent2);margin-bottom:.75rem;letter-spacing:-.01em;min-height:1.4rem;
-}
-.filter-range-readout span{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);margin:0 .25rem}
 .filter-panel-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.25rem}
 .filter-count-badge{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--accent);
   background:rgba(200,169,110,.12);padding:.18rem .5rem;border-radius:4px;white-space:nowrap}
@@ -1160,19 +1163,17 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   .header { flex-wrap: wrap; gap: .5rem; margin-bottom: 1.25rem; padding-bottom: 1rem; }
   h1 { font-size: 1.5rem; }
 
-  /* ── Tabs: scrollable strip, all 5 fit ── */
+  /* ── Tabs: all 5 fit in one row, no scrolling ── */
   .tabs {
     gap: 2px; padding: 3px; margin-bottom: 1.25rem;
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
     flex-wrap: nowrap;
-    /* hide scrollbar but keep scroll */
-    scrollbar-width: none;
+    overflow-x: visible;
   }
-  .tabs::-webkit-scrollbar { display: none; }
   .tab {
-    padding: .52rem .6rem; font-size: .7rem;
+    flex: 1;
+    padding: .48rem .2rem; font-size: .62rem;
     letter-spacing: 0; white-space: nowrap;
-    flex: 0 0 auto;
+    min-width: 0;
   }
 
   /* ── Settings panel ── */
@@ -1257,10 +1258,16 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 
   /* ── Community ── */
   .community-layout { grid-template-columns: 1fr; gap: 1.25rem; }
-  .feed-card { gap: .6rem; padding: .65rem .75rem; }
-  .feed-card-art, .feed-card-art-placeholder { width: 38px; height: 38px; }
-  .feed-card-score { font-size: 1.05rem; min-width: 1.8rem; }
-  .user-card { padding: .7rem .85rem; gap: .75rem; }
+  .feed-card { gap: .6rem; padding: .65rem .75rem; min-width: 0; overflow: hidden; }
+  .feed-card-body { min-width: 0; overflow: hidden; }
+  .feed-card-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .feed-card-artist { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .feed-card-art, .feed-card-art-placeholder { width: 38px; height: 38px; flex-shrink: 0; }
+  .feed-card-score { font-size: 1.05rem; min-width: 1.8rem; flex-shrink: 0; }
+  .user-card { padding: .7rem .85rem; gap: .75rem; min-width: 0; overflow: hidden; }
+  .user-card-info { min-width: 0; overflow: hidden; }
+  .user-card-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-card-stats { flex-wrap: wrap; gap: .4rem; }
 
   /* ── Modal: slide up from bottom, feels native ── */
   .modal-overlay { padding: .75rem; align-items: flex-end; }
@@ -1517,14 +1524,14 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
         </button>
         <div class="filter-dropdown-panel" id="scoreFilterPanel">
           <div class="filter-panel-title">Score Range</div>
-          <div class="filter-range-readout" id="scoreRangeReadout">All scores</div>
           <div class="dual-range-wrap">
             <div class="dual-range-track"></div>
             <div class="dual-range-fill" id="dualRangeFill"></div>
+            <div class="dual-thumb-label" id="thumbLabelMin">0</div>
+            <div class="dual-thumb-label" id="thumbLabelMax">10</div>
             <input class="dual-range-input" id="scoreRangeMin" type="range" min="0" max="10" step="0.5" value="0" oninput="onDualRangeInput()">
             <input class="dual-range-input" id="scoreRangeMax" type="range" min="0" max="10" step="0.5" value="10" oninput="onDualRangeInput()">
           </div>
-          <div class="dual-range-labels"><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span></div>
           <div class="filter-panel-footer">
             <span class="filter-count-badge" id="scoreFilterCount"></span>
             <button class="filter-clear-btn" id="scoreFilterClearBtn" onclick="clearScoreFilter()">Reset</button>
@@ -2965,8 +2972,9 @@ function onDualRangeInput() {
 
 function _updateDualRangeUI(lo, hi) {
   const fill   = document.getElementById('dualRangeFill');
-  const readout = document.getElementById('scoreRangeReadout');
   const btn    = document.getElementById('scoreFilterBtn');
+  const lblMin = document.getElementById('thumbLabelMin');
+  const lblMax = document.getElementById('thumbLabelMax');
   const isDefault = lo === 0 && hi === 10;
   const leftPct  = (lo / 10) * 100;
   const rightPct = (hi / 10) * 100;
@@ -2974,14 +2982,16 @@ function _updateDualRangeUI(lo, hi) {
     fill.style.left  = leftPct + '%';
     fill.style.width = (rightPct - leftPct) + '%';
   }
-  if (readout) {
-    if (isDefault) {
-      readout.innerHTML = '<span style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:.72rem">All scores</span>';
-    } else if (lo === hi) {
-      readout.innerHTML = lo % 1 === 0 ? String(lo) : lo.toFixed(1);
-    } else {
-      readout.innerHTML = (lo % 1 === 0 ? lo : lo.toFixed(1)) + '<span>–</span>' + (hi % 1 === 0 ? hi : hi.toFixed(1));
-    }
+  // Position floating labels above each thumb
+  // Clamp so label doesn't go off edge of the track
+  const thumbHalfPx = 9; // half of 18px thumb
+  if (lblMin) {
+    lblMin.style.left = `calc(${leftPct}% + ${thumbHalfPx * (1 - leftPct / 50)}px)`;
+    lblMin.textContent = lo % 1 === 0 ? lo : lo.toFixed(1);
+  }
+  if (lblMax) {
+    lblMax.style.left = `calc(${rightPct}% - ${thumbHalfPx * (rightPct / 50 - 1)}px)`;
+    lblMax.textContent = hi % 1 === 0 ? hi : hi.toFixed(1);
   }
   if (btn) btn.classList.toggle('active', !isDefault);
 }
