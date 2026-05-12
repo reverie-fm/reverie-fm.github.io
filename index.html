@@ -64,7 +64,7 @@ nav{
   min-height:100vh;display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   text-align:center;padding:8rem 2rem 5rem;
-  position:relative;z-index:1;overflow:hidden;
+  position:relative;z-index:1;
 }
 .hero::before{
   content:'';position:absolute;top:5%;left:-15%;
@@ -782,7 +782,7 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
 <script>
 // Floating music notes
 (function(){
-  var notes = ['♪','♫','♩','♬','𝅘𝅥𝅮'];
+  var notes = ['♪','♫','♩','♬'];
   var hero = document.getElementById('hero');
   function spawnNote(){
     var n = document.createElement('span');
@@ -795,8 +795,8 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
     hero.appendChild(n);
     setTimeout(function(){ n.remove(); }, (dur+delay+0.5)*1000);
   }
-  for(var i=0;i<6;i++) setTimeout(spawnNote, i*900);
-  setInterval(spawnNote, 1400);
+  for(var i=0;i<8;i++) setTimeout(spawnNote, i*400);
+  setInterval(spawnNote, 600);
 })();
 </script>
 

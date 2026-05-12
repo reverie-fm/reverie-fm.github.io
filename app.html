@@ -1054,17 +1054,18 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 
 /* Community layout */
 .community-layout{display:grid;grid-template-columns:1fr 320px;gap:1.75rem;align-items:start}
+.community-layout > *{min-width:0}
 @media(max-width:780px){.community-layout{grid-template-columns:1fr}}
 .community-col-title{font-family:'DM Mono',monospace;font-size:.6rem;text-transform:uppercase;
   letter-spacing:.18em;color:var(--accent);opacity:.6;margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem}
 .community-col-title::after{content:'';flex:1;height:1px;background:var(--border)}
 
 /* Recent feed */
-.recent-feed{display:flex;flex-direction:column;gap:8px}
+.recent-feed{display:flex;flex-direction:column;gap:8px;min-width:0;width:100%}
 .feed-card{display:flex;align-items:center;gap:.85rem;padding:.75rem .9rem;
   background:linear-gradient(160deg,rgba(255,255,255,.048) 0%,rgba(255,255,255,.012) 100%);
   border:1px solid rgba(255,255,255,.09);border-radius:12px;
-  transition:all .18s;position:relative;overflow:hidden;
+  transition:all .18s;position:relative;overflow:hidden;min-width:0;
   box-shadow:0 2px 10px rgba(0,0,0,.3);backdrop-filter:blur(6px)}
 .feed-card::before{content:'';position:absolute;top:0;left:-60%;width:35%;height:100%;
   background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.055) 50%,transparent 100%);
@@ -1095,7 +1096,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .user-card{display:flex;align-items:center;gap:1rem;padding:.9rem 1.1rem;
   background:linear-gradient(160deg,rgba(255,255,255,.048) 0%,rgba(255,255,255,.012) 100%);
   border:1px solid rgba(255,255,255,.09);border-radius:13px;cursor:pointer;
-  transition:all .18s;position:relative;overflow:hidden;margin-bottom:8px;
+  transition:all .18s;position:relative;overflow:hidden;margin-bottom:8px;min-width:0;
   box-shadow:0 2px 10px rgba(0,0,0,.3);backdrop-filter:blur(6px)}
 .user-card::before{content:'';position:absolute;top:0;left:-60%;width:35%;height:100%;
   background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.06) 50%,transparent 100%);
@@ -1575,8 +1576,8 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   </div>
 
   <!-- Community Tab -->
-  <div id="tab-community" style="display:none">
-    <div id="communityContent"></div>
+  <div id="tab-community" style="display:none;min-width:0;width:100%;overflow:hidden">
+    <div id="communityContent" style="min-width:0;width:100%"></div>
   </div>
 
 </div>
@@ -2070,11 +2071,11 @@ function _renderCommunityUsers() {
 function _buildCommunityShell(el) {
   el.innerHTML = `
     <div class="community-layout">
-      <div>
+      <div style="min-width:0">
         <div class="community-col-title">Recent Ratings</div>
         <div class="recent-feed" id="communityFeedContainer"><div class="empty-state" style="padding:2rem"><span class="loading-ring" style="width:18px;height:18px;border-width:2px;opacity:.6"></span></div></div>
       </div>
-      <div>
+      <div style="min-width:0">
         <div class="community-col-title">Users</div>
         <div class="community-search-wrap">
           <div class="community-search-bar">
