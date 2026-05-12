@@ -1584,15 +1584,26 @@ let _isAdmin = false;
 // Supabase client — pinned version + fixed storage key for reliable session persistence
 const SUPABASE_URL = 'https://zqlutjvsmtktwizhzjms.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxbHV0anZzbXRrdHdpemh6am1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzOTUwMDAsImV4cCI6MjA5Mzk3MTAwMH0.rMvkjTzmmi1T0MCXnyAGA6Cw-CO4ZK6vfgNBVPKJj1I';
-const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    storageKey: 'reverie_session',
-    storage: window.localStorage,
-    autoRefreshToken: true,
-    detectSessionInUrl: false,
-  }
-});
+let _sb;
+try {
+  _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      storageKey: 'reverie_session',
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+    }
+  });
+} catch(e) {
+  console.error('[Reverie] Supabase init failed:', e);
+  // Show login screen immediately if Supabase fails to load
+  document.addEventListener('DOMContentLoaded', function() {
+    const fade = document.getElementById('page-fade');
+    const overlay = document.getElementById('loginOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    if (fade) { fade.classList.add('gone'); setTimeout(() => { fade.style.display = 'none'; }, 450); }
+  });
+}
 
 // In-memory cache of all profiles (username -> {id, username, joinedAt})
 let _profilesCache = null;
@@ -2965,7 +2976,7 @@ function _updateDualRangeUI(lo, hi) {
   }
   if (readout) {
     if (isDefault) {
-      readout.innerHTML = '<span style="color:var(--muted);font-family:'DM Mono',monospace;font-size:.72rem">All scores</span>';
+      readout.innerHTML = '<span style="color:var(--muted);font-family:\'DM Mono\',monospace;font-size:.72rem">All scores</span>';
     } else if (lo === hi) {
       readout.innerHTML = lo % 1 === 0 ? String(lo) : lo.toFixed(1);
     } else {
@@ -4119,31 +4130,45 @@ function _revealPage() {
 
 document.addEventListener('DOMContentLoaded', async function() {
   const overlay = document.getElementById('loginOverlay');
-  // Try to restore from Supabase auth session (JWT stored by Supabase in localStorage)
-  let { data: { session } } = await _sb.auth.getSession();
-  if (!session) {
-    const { data: refreshed } = await _sb.auth.refreshSession();
-    session = refreshed?.session ?? null;
-  }
-  if (session?.user) {
-    _currentUserId = session.user.id;
-    const { data: profile } = await _sb.from('profiles').select('*').eq('id', _currentUserId).maybeSingle();
-    // Always use fresh DB profile username — never trust stale localStorage
-    const savedUsername = profile?.username || _loadSavedSession()?.username;
-    if (savedUsername) {
-      _currentUsername = savedUsername;
-      _saveSession(_currentUserId, _currentUsername); // keep username cache fresh
-      _isAdmin = profile?.is_admin === true;
-      _loadPrefsFromProfile(profile);
-      await _loadAllProfiles();
-      await _loadCurrentUserRatings();
-      if (overlay) overlay.style.display = 'none';
-      initApp(_currentUsername);
-      _revealPage();
-      return;
+
+  // Hard fallback: if nothing resolves in 8s, show login screen
+  const fallbackTimer = setTimeout(() => {
+    if (overlay) overlay.style.display = 'flex';
+    _revealPage();
+  }, 8000);
+
+  try {
+    if (!_sb) throw new Error('Supabase not initialized');
+    // Try to restore from Supabase auth session (JWT stored by Supabase in localStorage)
+    let { data: { session } } = await _sb.auth.getSession();
+    if (!session) {
+      const { data: refreshed } = await _sb.auth.refreshSession();
+      session = refreshed?.session ?? null;
     }
+    if (session?.user) {
+      _currentUserId = session.user.id;
+      const { data: profile } = await _sb.from('profiles').select('*').eq('id', _currentUserId).maybeSingle();
+      // Always use fresh DB profile username — never trust stale localStorage
+      const savedUsername = profile?.username || _loadSavedSession()?.username;
+      if (savedUsername) {
+        _currentUsername = savedUsername;
+        _saveSession(_currentUserId, _currentUsername); // keep username cache fresh
+        _isAdmin = profile?.is_admin === true;
+        _loadPrefsFromProfile(profile);
+        await _loadAllProfiles();
+        await _loadCurrentUserRatings();
+        clearTimeout(fallbackTimer);
+        if (overlay) overlay.style.display = 'none';
+        initApp(_currentUsername);
+        _revealPage();
+        return;
+      }
+    }
+  } catch(e) {
+    console.error('[Reverie] Auth init error:', e);
   }
 
+  clearTimeout(fallbackTimer);
   // No valid session — show login
   if (overlay) overlay.style.display = 'flex';
   _revealPage();
