@@ -234,25 +234,80 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .sort-row{display:flex;gap:8px;align-items:center}
 
 /* ── Score range filter ── */
-.score-filter-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;
-  padding:.65rem 1rem;border-radius:10px;
-  background:linear-gradient(160deg,rgba(255,255,255,.045) 0%,rgba(255,255,255,.01) 100%);
-  border:1px solid var(--border);transition:border-color .2s}
-.score-filter-row.active{border-color:var(--border2)}
-.score-filter-label{font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
-.score-filter-inputs{display:flex;align-items:center;gap:.45rem}
-.score-filter-input{width:3.4rem;background:var(--surface2);border:1px solid var(--border);border-radius:7px;
-  padding:.3rem .5rem;color:var(--text);font-size:.82rem;font-family:'DM Mono',monospace;text-align:center;
-  outline:none;transition:border .2s;-moz-appearance:textfield}
-.score-filter-input::-webkit-outer-spin-button,.score-filter-input::-webkit-inner-spin-button{-webkit-appearance:none}
-.score-filter-input:focus{border-color:var(--accent)}
-.score-filter-sep{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)}
-.score-filter-clear{background:none;border:none;color:var(--muted);font-size:.72rem;cursor:pointer;
-  font-family:'DM Mono',monospace;letter-spacing:.04em;padding:.2rem .4rem;border-radius:5px;
-  transition:color .15s,background .15s;white-space:nowrap}
-.score-filter-clear:hover{color:var(--red);background:rgba(224,92,92,.08)}
-.score-filter-count{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--accent);
+/* ── Score filter dropdown ── */
+.filter-dropdown-wrap{position:relative}
+.filter-dropdown-btn{
+  display:flex;align-items:center;gap:.45rem;
+  padding:.45rem .85rem;background:none;
+  border:1px solid var(--border);border-radius:8px;
+  color:var(--muted);font-size:.75rem;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .18s;white-space:nowrap;
+}
+.filter-dropdown-btn:hover{border-color:var(--border2);color:var(--accent)}
+.filter-dropdown-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(200,169,110,.07)}
+.filter-dropdown-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.filter-dropdown-btn .filter-pip{
+  width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;display:none;
+}
+.filter-dropdown-btn.active .filter-pip{display:block}
+.filter-dropdown-panel{
+  position:absolute;top:calc(100% + 6px);left:0;z-index:50;
+  background:linear-gradient(160deg,rgba(30,28,24,.98) 0%,rgba(18,17,14,.99) 100%);
+  border:1px solid var(--border2);border-radius:12px;padding:1.1rem 1.2rem 1rem;
+  box-shadow:0 8px 32px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.06) inset;
+  backdrop-filter:blur(20px);min-width:240px;display:none;
+}
+.filter-dropdown-panel.open{display:block;animation:panelFadeIn .15s ease both}
+.filter-panel-title{font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;
+  letter-spacing:.14em;color:var(--accent);opacity:.7;margin-bottom:.85rem}
+/* ── Dual-handle range slider ── */
+.dual-range-wrap{position:relative;height:28px;margin-bottom:.5rem}
+.dual-range-track{
+  position:absolute;top:50%;left:0;right:0;
+  height:5px;border-radius:3px;
+  transform:translateY(-50%);
+  background:var(--surface3);
+}
+.dual-range-fill{
+  position:absolute;top:50%;height:5px;border-radius:3px;
+  background:var(--accent);transform:translateY(-50%);
+  pointer-events:none;
+}
+.dual-range-input{
+  position:absolute;top:50%;width:100%;
+  -webkit-appearance:none;appearance:none;
+  height:5px;background:transparent;outline:none;
+  transform:translateY(-50%);pointer-events:none;
+  margin:0;
+}
+.dual-range-input::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--accent2);border:2px solid var(--bg);
+  box-shadow:0 0 0 3px rgba(200,169,110,.25);
+  cursor:pointer;pointer-events:auto;
+  transition:transform .15s,box-shadow .15s;
+}
+.dual-range-input::-webkit-slider-thumb:hover{transform:scale(1.18);box-shadow:0 0 0 5px rgba(200,169,110,.3)}
+.dual-range-input::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--accent2);border:2px solid var(--bg);
+  box-shadow:0 0 0 3px rgba(200,169,110,.25);
+  cursor:pointer;pointer-events:auto;
+}
+.dual-range-labels{display:flex;justify-content:space-between;
+  font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);margin-bottom:.85rem;opacity:.6}
+.filter-range-readout{
+  text-align:center;font-family:'Playfair Display',serif;font-size:1rem;
+  color:var(--accent2);margin-bottom:.75rem;letter-spacing:-.01em;min-height:1.4rem;
+}
+.filter-range-readout span{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);margin:0 .25rem}
+.filter-panel-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.25rem}
+.filter-count-badge{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--accent);
   background:rgba(200,169,110,.12);padding:.18rem .5rem;border-radius:4px;white-space:nowrap}
+.filter-clear-btn{background:none;border:none;color:var(--muted);font-size:.72rem;cursor:pointer;
+  font-family:'DM Mono',monospace;padding:.2rem .4rem;border-radius:5px;transition:color .15s,background .15s}
+.filter-clear-btn:hover{color:var(--red);background:rgba(224,92,92,.08)}
 
 /* ── Community feed fade transition ── */
 .recent-feed{transition:none}
@@ -1078,6 +1133,169 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .profile-stat-label{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:.15rem}
 .profile-ratings-list{display:flex;flex-direction:column;gap:8px}
 
+
+/* ═══════════════════════════════════════════
+   MOBILE RESPONSIVE  (≤ 600px)
+   ═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ═══════════════════════════════════════════ */
+
+/* ── Phone (≤ 600px) ── */
+@media (max-width: 600px) {
+
+  /* ── Base layout ── */
+  .app { padding: 1rem .85rem 5rem; }
+
+  /* ── Home nav bar ── */
+  div[style*="padding:.55rem 2rem"] { padding: .55rem 1rem !important; }
+
+  /* ── User bar ── */
+  .user-bar { margin-bottom: 1rem; gap: .4rem; }
+  .user-bar-name { font-size: .78rem; }
+  .user-bar-logout span { display: none; }
+  .user-bar-logout { padding: 0 .55rem; }
+
+  /* ── Header ── */
+  .header { flex-wrap: wrap; gap: .5rem; margin-bottom: 1.25rem; padding-bottom: 1rem; }
+  h1 { font-size: 1.5rem; }
+
+  /* ── Tabs: scrollable strip, all 5 fit ── */
+  .tabs {
+    gap: 2px; padding: 3px; margin-bottom: 1.25rem;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    /* hide scrollbar but keep scroll */
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: .52rem .6rem; font-size: .7rem;
+    letter-spacing: 0; white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  /* ── Settings panel ── */
+  .setup-fields { flex-direction: column; }
+  .setup-field { min-width: unset; }
+
+  /* ── Add Music: paste zone ── */
+  .paste-zone { padding: 1.5rem 1rem; }
+  .paste-input-row { flex-direction: column; }
+  .btn-fetch { width: 100%; }
+
+  /* ── Add Music: fetched card — art constrained, no giant square ── */
+  .fetched-inner { flex-direction: column; padding: 1rem; gap: .85rem; align-items: flex-start; }
+  .fetched-art,
+  .fetched-art-placeholder {
+    width: 100%; max-width: 200px; height: auto; aspect-ratio: 1;
+    border-radius: 8px; align-self: center;
+  }
+  .fetched-info { padding: 0; width: 100%; }
+
+  /* ── My Rankings ── */
+  .filter-sort-row { gap: .5rem; flex-wrap: wrap; }
+  .rank-note { display: none; }
+  .rank-art-img, .rank-art-emoji, .rank-art-wrap { width: 46px; height: 46px; }
+  .rank-info { padding: .45rem .55rem; }
+  .rank-name { font-size: .82rem; }
+  .rank-artist { font-size: .7rem; }
+  .rank-pos { min-width: 2rem; font-size: 1.05rem; }
+  .score-ring { width: 42px; height: 42px; }
+  .score-ring-num { font-size: .88rem; }
+  .rank-actions { padding: .45rem .35rem; gap: 3px; }
+  .rank-actions .icon-btn { padding: .26rem .35rem; font-size: .7rem; }
+
+  /* ── Stats bar (top of rankings) ── */
+  .stats-bar { flex-wrap: wrap; gap: .5rem; padding: .7rem .85rem; }
+  .stat { min-width: 65px; }
+  .stat-num { font-size: 1.2rem; }
+
+  /* ── Stat cards (statistics tab) ── */
+  .stat-cards { gap: 8px; }
+  .stat-card { min-width: calc(50% - 4px); padding: .75rem .9rem; }
+  .stat-card-num { font-size: 1.5rem; }
+
+  /* ── Global stats strip: stack as 2 rows instead of 3 squished cols ── */
+  .global-stats-strip {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  /* hide the 1px divider columns */
+  .global-stat-divider { display: none; }
+  /* make the 3rd stat (top artist) span full width */
+  .global-stats-strip .global-stat-col:last-child { grid-column: 1 / -1; border-top: 1px solid var(--border); padding-top: .75rem; }
+  .global-stat-col { padding: .5rem .75rem; }
+  .global-stat-num { font-size: 1.4rem; }
+  /* truncate long artist name with ellipsis */
+  .global-stat-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+  /* ── Distribution chart ── */
+  .dist-chart-inner { height: 80px; gap: 2px; }
+  .dist-col-label { font-size: .45rem; }
+
+  /* ── Albums vinyl grid: 2 columns, smaller discs ── */
+  .vinyl-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem .75rem;
+  }
+  .vinyl-disc-outer { width: 120px; height: 120px; }
+  .vinyl-case { padding: .9rem .75rem .7rem; }
+  .vinyl-label-name { font-size: .72rem; }
+  .vinyl-label-artist { font-size: .62rem; }
+  .vinyl-label-score { font-size: .85rem; }
+  /* expand panel stacks art above tracks */
+  .vinyl-expand-body { flex-direction: column; }
+  .vinyl-expand-art { width: 100%; min-height: 160px; }
+  .vinyl-expand-art-fallback { width: 100%; }
+  .vinyl-row-break.open { max-height: 480px; }
+  .vinyl-expand-tracks { max-height: 180px; }
+
+  /* ── Explore / search ── */
+  .explore-search-bar { flex-wrap: nowrap; }
+  .explore-search-btn { padding: .52rem .75rem; font-size: .75rem; }
+
+  /* ── Community ── */
+  .community-layout { grid-template-columns: 1fr; gap: 1.25rem; }
+  .feed-card { gap: .6rem; padding: .65rem .75rem; }
+  .feed-card-art, .feed-card-art-placeholder { width: 38px; height: 38px; }
+  .feed-card-score { font-size: 1.05rem; min-width: 1.8rem; }
+  .user-card { padding: .7rem .85rem; gap: .75rem; }
+
+  /* ── Modal: slide up from bottom, feels native ── */
+  .modal-overlay { padding: .75rem; align-items: flex-end; }
+  .modal {
+    border-radius: 18px 18px 12px 12px;
+    padding: 1.5rem 1.25rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* ── Login box ── */
+  .login-box { padding: 1.75rem 1.25rem; }
+  .login-title { font-size: 1.5rem; }
+
+  /* ── Score filter dropdown ── */
+  .filter-dropdown-panel { min-width: 200px; }
+
+  /* ── Toast ── */
+  .toast { font-size: .75rem; padding: .55rem 1rem; bottom: 1.25rem; }
+
+  /* ── Settings panel ── */
+  .settings-inner { padding: 1rem; }
+}
+
+/* ── Small tablet / large phone (601–780px) ── */
+@media (min-width: 601px) and (max-width: 780px) {
+  .app { padding: 1.5rem 1.25rem 5rem; }
+  .vinyl-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .tab { font-size: .78rem; padding: .6rem .7rem; }
+  .rank-note { max-width: 160px; }
+  .fetched-inner { flex-direction: column; }
+  .fetched-art, .fetched-art-placeholder { width: 100%; max-width: 240px; height: auto; aspect-ratio: 1; align-self: center; }
+  .fetched-info { padding: 0; width: 100%; }
+  .global-stat-label { font-size: .55rem; }
+}
 </style>
 </head>
 <body>
@@ -1290,22 +1508,33 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
           <option value="alpha">A–Z</option>
         </select>
       </div>
+      <!-- Score filter dropdown -->
+      <div class="filter-dropdown-wrap" id="scoreFilterWrap" style="display:none">
+        <button class="filter-dropdown-btn" id="scoreFilterBtn" onclick="toggleScoreFilterPanel()">
+          <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Score
+          <div class="filter-pip"></div>
+        </button>
+        <div class="filter-dropdown-panel" id="scoreFilterPanel">
+          <div class="filter-panel-title">Score Range</div>
+          <div class="filter-range-readout" id="scoreRangeReadout">All scores</div>
+          <div class="dual-range-wrap">
+            <div class="dual-range-track"></div>
+            <div class="dual-range-fill" id="dualRangeFill"></div>
+            <input class="dual-range-input" id="scoreRangeMin" type="range" min="0" max="10" step="0.5" value="0" oninput="onDualRangeInput()">
+            <input class="dual-range-input" id="scoreRangeMax" type="range" min="0" max="10" step="0.5" value="10" oninput="onDualRangeInput()">
+          </div>
+          <div class="dual-range-labels"><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span></div>
+          <div class="filter-panel-footer">
+            <span class="filter-count-badge" id="scoreFilterCount"></span>
+            <button class="filter-clear-btn" id="scoreFilterClearBtn" onclick="clearScoreFilter()">Reset</button>
+          </div>
+        </div>
+      </div>
       <button class="btn-export" onclick="exportCSV()" title="Export to CSV">
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export
       </button>
-    </div>
-    <div class="score-filter-row" id="scoreFilterRow" style="display:none">
-      <span class="score-filter-label">Score range</span>
-      <div class="score-filter-inputs">
-        <input class="score-filter-input" id="scoreFilterMin" type="number" min="0" max="10" step="0.5" placeholder="0"
-          oninput="setScoreFilter(this.value, document.getElementById('scoreFilterMax').value)">
-        <span class="score-filter-sep">—</span>
-        <input class="score-filter-input" id="scoreFilterMax" type="number" min="0" max="10" step="0.5" placeholder="10"
-          oninput="setScoreFilter(document.getElementById('scoreFilterMin').value, this.value)">
-      </div>
-      <span class="score-filter-count" id="scoreFilterCount" style="display:none"></span>
-      <button class="score-filter-clear" id="scoreFilterClearBtn" onclick="clearScoreFilter()" style="display:none">Clear filter</button>
     </div>
     <div class="rankings-list" id="rankingsList"></div>
   </div>
@@ -2685,6 +2914,67 @@ function exportCSV() {
 // ── Rankings ──────────────────────────────────────────────
 function setSortMode(m) { sortMode = m; renderRankings(); }
 
+// ── Score filter dropdown ──────────────────────────────────
+function toggleScoreFilterPanel() {
+  const panel = document.getElementById('scoreFilterPanel');
+  const btn   = document.getElementById('scoreFilterBtn');
+  if (!panel) return;
+  const isOpen = panel.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  // Close when clicking outside
+  if (isOpen) {
+    setTimeout(() => {
+      document.addEventListener('click', _closeScorePanel, { once: true, capture: true });
+    }, 0);
+  }
+}
+function _closeScorePanel(e) {
+  const wrap = document.getElementById('scoreFilterWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('scoreFilterPanel')?.classList.remove('open');
+    document.getElementById('scoreFilterBtn')?.classList.remove('open');
+  } else if (wrap && wrap.contains(e.target)) {
+    // re-add listener if click was inside
+    document.addEventListener('click', _closeScorePanel, { once: true, capture: true });
+  }
+}
+
+function onDualRangeInput() {
+  const minEl = document.getElementById('scoreRangeMin');
+  const maxEl = document.getElementById('scoreRangeMax');
+  let lo = parseFloat(minEl.value);
+  let hi = parseFloat(maxEl.value);
+  // Allow same value (single score filter)
+  if (lo > hi) { lo = hi; minEl.value = lo; }
+  scoreFilterMin = lo;
+  scoreFilterMax = hi;
+  _updateDualRangeUI(lo, hi);
+  renderRankings();
+}
+
+function _updateDualRangeUI(lo, hi) {
+  const fill   = document.getElementById('dualRangeFill');
+  const readout = document.getElementById('scoreRangeReadout');
+  const btn    = document.getElementById('scoreFilterBtn');
+  const isDefault = lo === 0 && hi === 10;
+  const leftPct  = (lo / 10) * 100;
+  const rightPct = (hi / 10) * 100;
+  if (fill) {
+    fill.style.left  = leftPct + '%';
+    fill.style.width = (rightPct - leftPct) + '%';
+  }
+  if (readout) {
+    if (isDefault) {
+      readout.innerHTML = '<span style="color:var(--muted);font-family:'DM Mono',monospace;font-size:.72rem">All scores</span>';
+    } else if (lo === hi) {
+      readout.innerHTML = lo % 1 === 0 ? String(lo) : lo.toFixed(1);
+    } else {
+      readout.innerHTML = (lo % 1 === 0 ? lo : lo.toFixed(1)) + '<span>–</span>' + (hi % 1 === 0 ? hi : hi.toFixed(1));
+    }
+  }
+  if (btn) btn.classList.toggle('active', !isDefault);
+}
+
 function setScoreFilter(min, max) {
   scoreFilterMin = (min !== '' && min !== null && !isNaN(min)) ? parseFloat(min) : null;
   scoreFilterMax = (max !== '' && max !== null && !isNaN(max)) ? parseFloat(max) : null;
@@ -2694,10 +2984,11 @@ function setScoreFilter(min, max) {
 function clearScoreFilter() {
   scoreFilterMin = null;
   scoreFilterMax = null;
-  const minEl = document.getElementById('scoreFilterMin');
-  const maxEl = document.getElementById('scoreFilterMax');
-  if (minEl) minEl.value = '';
-  if (maxEl) maxEl.value = '';
+  const minEl = document.getElementById('scoreRangeMin');
+  const maxEl = document.getElementById('scoreRangeMax');
+  if (minEl) minEl.value = '0';
+  if (maxEl) maxEl.value = '10';
+  _updateDualRangeUI(0, 10);
   renderRankings();
 }
 
@@ -2715,12 +3006,15 @@ function renderRankings() {
   if (!ratings.length) {
     statsBar.style.display = 'none';
     if (filterRow) filterRow.style.display = 'none';
+  const sfWrap = document.getElementById('scoreFilterWrap');
+  if (sfWrap) sfWrap.style.display = 'none';
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🎼</div><div class="empty-text">Your rankings are empty.<br>Head to Add Music to start rating tracks.</div></div>`;
     return;
   }
 
-  // Show filter row
-  if (filterRow) filterRow.style.display = 'flex';
+  // Show filter dropdown
+  const sfWrap2 = document.getElementById('scoreFilterWrap');
+  if (sfWrap2) sfWrap2.style.display = '';
 
   const avg = (ratings.reduce((s, r) => s + r.score, 0) / ratings.length).toFixed(1);
   statsBar.style.display = 'flex';
@@ -2764,20 +3058,14 @@ function renderRankings() {
     });
   }
 
-  // Update filter row active state and count badge
-  if (filterRow) {
-    filterRow.classList.toggle('active', hasScoreFilter);
-    const countEl = document.getElementById('scoreFilterCount');
-    if (countEl) {
-      if (hasScoreFilter) {
-        countEl.style.display = '';
-        countEl.textContent = `${filtered.length} shown`;
-      } else {
-        countEl.style.display = 'none';
-      }
-    }
-    const clearBtn = document.getElementById('scoreFilterClearBtn');
-    if (clearBtn) clearBtn.style.display = hasScoreFilter ? '' : 'none';
+  // Update filter count badge
+  const countEl = document.getElementById('scoreFilterCount');
+  if (countEl) countEl.textContent = hasScoreFilter ? `${filtered.length} shown` : '';
+  // Keep UI in sync (slider may have been set programmatically)
+  if (hasScoreFilter) {
+    const lo = scoreFilterMin ?? 0;
+    const hi = scoreFilterMax ?? 10;
+    _updateDualRangeUI(lo, hi);
   }
 
   if (!filtered.length) {
