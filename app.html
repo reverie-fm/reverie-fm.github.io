@@ -29,6 +29,8 @@ html{min-height:100vh;overflow-y:scroll;scrollbar-gutter:stable}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;min-height:100vh}
 
 /* ── Page fade-in overlay ── */
+#page-fade{position:fixed;inset:0;background:var(--bg);z-index:10000;pointer-events:none;transition:opacity .4s ease}
+#page-fade.gone{opacity:0}
 
 /* ── Custom scrollbar ── */
 ::-webkit-scrollbar{width:3px;height:3px}
@@ -1297,6 +1299,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 </style>
 </head>
 <body>
+<div id="page-fade"></div>
 
 <div style="background:rgba(10,10,10,0.95);border-bottom:1px solid rgba(200,169,110,0.13);padding:.55rem 2rem;display:flex;align-items:center;position:sticky;top:0;z-index:800"><a href="index.html?home=1" style="font-family:'DM Mono',monospace;font-size:.72rem;color:#7a7a72;text-decoration:none;letter-spacing:.08em;text-transform:uppercase">← Home</a></div>
 <!-- Spotify drag-and-drop full-page overlay -->
@@ -1581,7 +1584,7 @@ let _isAdmin = false;
 // Supabase client — pinned version + fixed storage key for reliable session persistence
 const SUPABASE_URL = 'https://zqlutjvsmtktwizhzjms.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxbHV0anZzbXRrdHdpemh6am1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzOTUwMDAsImV4cCI6MjA5Mzk3MTAwMH0.rMvkjTzmmi1T0MCXnyAGA6Cw-CO4ZK6vfgNBVPKJj1I';
-const _sb = (typeof supabase !== 'undefined') && supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     storageKey: 'reverie_session',
@@ -4107,16 +4110,15 @@ function _clearSavedSession() {
 }
 
 // ── Init ──────────────────────────────────────────────────
-function _revealPage() { /* page-fade removed */ }
+function _revealPage() {
+  const fade = document.getElementById('page-fade');
+  if (!fade) return;
+  fade.classList.add('gone');
+  setTimeout(() => { fade.style.display = 'none'; }, 450);
+}
 
 document.addEventListener('DOMContentLoaded', async function() {
   const overlay = document.getElementById('loginOverlay');
-  if (!_sb) {
-    // Supabase CDN failed — just show the login screen
-    if (overlay) overlay.style.display = 'flex';
-    _revealPage();
-    return;
-  }
   // Try to restore from Supabase auth session (JWT stored by Supabase in localStorage)
   let { data: { session } } = await _sb.auth.getSession();
   if (!session) {

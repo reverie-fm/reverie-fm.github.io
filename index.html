@@ -362,18 +362,12 @@ footer{text-align:center;padding:2rem 2rem 3rem;font-family:'DM Mono',monospace;
 <div id="page-fade"></div>
 <script>
   // Fade in once page is ready
-  function clearFade() {
-    var fade = document.getElementById('page-fade');
-    if (fade && !fade.classList.contains('gone')) {
-      fade.classList.add('gone');
-      setTimeout(function(){ fade.style.display='none'; }, 400);
-    }
-  }
   window.addEventListener('load', function() {
-    requestAnimationFrame(clearFade);
+    requestAnimationFrame(function() {
+      var fade = document.getElementById('page-fade');
+      if (fade) { fade.classList.add('gone'); setTimeout(function(){ fade.style.display='none'; }, 400); }
+    });
   });
-  // Fallback: always clear after 800ms regardless of load state
-  setTimeout(clearFade, 800);
 </script>
 
 <nav>
