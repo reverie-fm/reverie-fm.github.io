@@ -1584,7 +1584,7 @@ let _isAdmin = false;
 // Supabase client — pinned version + fixed storage key for reliable session persistence
 const SUPABASE_URL = 'https://zqlutjvsmtktwizhzjms.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxbHV0anZzbXRrdHdpemh6am1zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzOTUwMDAsImV4cCI6MjA5Mzk3MTAwMH0.rMvkjTzmmi1T0MCXnyAGA6Cw-CO4ZK6vfgNBVPKJj1I';
-const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+const _sb = (typeof supabase !== 'undefined') && supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     storageKey: 'reverie_session',
@@ -4112,13 +4112,22 @@ function _clearSavedSession() {
 // ── Init ──────────────────────────────────────────────────
 function _revealPage() {
   const fade = document.getElementById('page-fade');
-  if (!fade) return;
+  if (!fade || fade.classList.contains('gone')) return;
   fade.classList.add('gone');
   setTimeout(() => { fade.style.display = 'none'; }, 450);
 }
 
+// Hard fallback — always show the page after 3s even if Supabase/CDN hangs
+setTimeout(_revealPage, 3000);
+
 document.addEventListener('DOMContentLoaded', async function() {
   const overlay = document.getElementById('loginOverlay');
+  if (!_sb) {
+    // Supabase CDN failed — just show the login screen
+    if (overlay) overlay.style.display = 'flex';
+    _revealPage();
+    return;
+  }
   // Try to restore from Supabase auth session (JWT stored by Supabase in localStorage)
   let { data: { session } } = await _sb.auth.getSession();
   if (!session) {
