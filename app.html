@@ -2281,17 +2281,10 @@ async function adminEditUser() {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-update-user`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-      body: JSON.stringify({ targetUserId: profile.id, newEmail, newPassword: newPassword || undefined })
+      body: JSON.stringify({ targetUserId: profile.id, newEmail, newUsername, newPassword: newPassword || undefined })
     });
     const json = await res.json();
     if (!res.ok || json.error) { setAdminStatus('Error: ' + (json.error || res.status), false); return; }
-    console.log('[Admin] Updating profiles table — id:', profile.id, 'newUsername:', newUsername);
-    const { data: updateData, error } = await _sb.from('profiles').update({ username: newUsername }).eq('id', profile.id).select();
-    console.log('[Admin] profiles.update result — data:', updateData, 'error:', error);
-    if (error) { setAdminStatus('Error updating username: ' + error.message, false); return; }
-    // Verify the write actually landed
-    const { data: verifyData } = await _sb.from('profiles').select('username').eq('id', profile.id).maybeSingle();
-    console.log('[Admin] Verify read-back — username in DB is now:', verifyData?.username);
     // Re-key the profiles cache so the new username is immediately reflected everywhere
     if (_profilesCache?.[target]) {
       _profilesCache[newUsername] = { ..._profilesCache[target], username: newUsername };
