@@ -3370,9 +3370,9 @@ function renderStats() {
   const lowest = Math.min(...scores);
   const stddev = Math.sqrt(scores.reduce((s,v) => s + (v-avg)**2, 0) / scores.length);
 
-  // Score distribution: every 0.5 step from 1 to 10
+  // Score distribution: every 0.5 step from 0 to 10
   const steps = [];
-  for (let v = 1; v <= 10; v += 0.5) steps.push(v);
+  for (let v = 0; v <= 10; v += 0.5) steps.push(v);
   const counts = steps.map(v => ratings.filter(r => r.score === v).length);
   const maxCount = Math.max(...counts, 1);
 
@@ -3498,7 +3498,7 @@ function renderStats() {
         <div class="stat-card" style="border-color:rgba(93,186,122,.3)"><div class="stat-card-num" id="sc-t1" style="color:${scoreColor(10)}">—</div><div class="stat-card-label">Masterpiece (9.5–10)</div></div>
         <div class="stat-card" style="border-color:rgba(93,186,122,.2)"><div class="stat-card-num" id="sc-t2" style="color:${scoreColor(8.5)}">—</div><div class="stat-card-label">Great (7.5–9)</div></div>
         <div class="stat-card" style="border-color:rgba(200,169,110,.15)"><div class="stat-card-num" id="sc-t3" style="color:${scoreColor(6)}">—</div><div class="stat-card-label">Decent (5–7)</div></div>
-        <div class="stat-card" style="border-color:rgba(224,92,92,.2)"><div class="stat-card-num" id="sc-t4" style="color:${scoreColor(2.5)}">—</div><div class="stat-card-label">Meh (1–4.5)</div></div>
+        <div class="stat-card" style="border-color:rgba(224,92,92,.2)"><div class="stat-card-num" id="sc-t4" style="color:${scoreColor(2.5)}">—</div><div class="stat-card-label">Meh (0–4.5)</div></div>
       </div>
     </div>
 
