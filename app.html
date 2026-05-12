@@ -232,6 +232,34 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 
 .filter-sort-row{display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap}
 .sort-row{display:flex;gap:8px;align-items:center}
+
+/* ── Score range filter ── */
+.score-filter-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;
+  padding:.65rem 1rem;border-radius:10px;
+  background:linear-gradient(160deg,rgba(255,255,255,.045) 0%,rgba(255,255,255,.01) 100%);
+  border:1px solid var(--border);transition:border-color .2s}
+.score-filter-row.active{border-color:var(--border2)}
+.score-filter-label{font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.score-filter-inputs{display:flex;align-items:center;gap:.45rem}
+.score-filter-input{width:3.4rem;background:var(--surface2);border:1px solid var(--border);border-radius:7px;
+  padding:.3rem .5rem;color:var(--text);font-size:.82rem;font-family:'DM Mono',monospace;text-align:center;
+  outline:none;transition:border .2s;-moz-appearance:textfield}
+.score-filter-input::-webkit-outer-spin-button,.score-filter-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.score-filter-input:focus{border-color:var(--accent)}
+.score-filter-sep{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted)}
+.score-filter-clear{background:none;border:none;color:var(--muted);font-size:.72rem;cursor:pointer;
+  font-family:'DM Mono',monospace;letter-spacing:.04em;padding:.2rem .4rem;border-radius:5px;
+  transition:color .15s,background .15s;white-space:nowrap}
+.score-filter-clear:hover{color:var(--red);background:rgba(224,92,92,.08)}
+.score-filter-count{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--accent);
+  background:rgba(200,169,110,.12);padding:.18rem .5rem;border-radius:4px;white-space:nowrap}
+
+/* ── Community feed fade transition ── */
+.recent-feed{transition:none}
+.feed-card{transition:opacity .35s ease, transform .35s ease}
+.feed-card.fade-out{opacity:0;transform:translateY(-4px)}
+.feed-card.fade-in{animation:feedCardIn .38s ease both}
+@keyframes feedCardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .sort-label{font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap}
 select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);
   padding:.45rem .8rem;font-size:.8rem;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none}
@@ -1267,6 +1295,18 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
         Export
       </button>
     </div>
+    <div class="score-filter-row" id="scoreFilterRow" style="display:none">
+      <span class="score-filter-label">Score range</span>
+      <div class="score-filter-inputs">
+        <input class="score-filter-input" id="scoreFilterMin" type="number" min="0" max="10" step="0.5" placeholder="0"
+          oninput="setScoreFilter(this.value, document.getElementById('scoreFilterMax').value)">
+        <span class="score-filter-sep">—</span>
+        <input class="score-filter-input" id="scoreFilterMax" type="number" min="0" max="10" step="0.5" placeholder="10"
+          oninput="setScoreFilter(document.getElementById('scoreFilterMin').value, this.value)">
+      </div>
+      <span class="score-filter-count" id="scoreFilterCount" style="display:none"></span>
+      <button class="score-filter-clear" id="scoreFilterClearBtn" onclick="clearScoreFilter()" style="display:none">Clear filter</button>
+    </div>
     <div class="rankings-list" id="rankingsList"></div>
   </div>
   <!-- Albums Tab -->
@@ -1681,16 +1721,70 @@ function _renderCommunityFeed() {
   });
   allItems.sort((a, b) => (b.item.ratedAt || 0) - (a.item.ratedAt || 0));
   const feedSlice = allItems.slice(0, communityFeedLimit);
-  const feedHTML = feedSlice.map(({ item, username }) => _renderFeedCard(item, username)).join('');
+
+  // Build a unique key per card so we can diff
+  const keyOf = ({ item, username }) => `${username}::${item.id}::${item.ratedAt}`;
+
+  // Collect existing card keys from DOM
+  const existingKeys = new Set();
+  feedEl.querySelectorAll('.feed-card[data-feed-key]').forEach(el => existingKeys.add(el.dataset.feedKey));
+
+  const newKeys = new Set(feedSlice.map(keyOf));
+
+  // If nothing changed (same set of keys), skip any DOM work
+  const changed = feedSlice.some(e => !existingKeys.has(keyOf(e))) || existingKeys.size !== newKeys.size;
+  if (!changed && feedEl.querySelector('.feed-card')) return;
+
+  // Build new HTML with data-feed-key attributes
+  const feedHTML = feedSlice.map(({ item, username }) => {
+    const key = keyOf({ item, username });
+    const isNew = !existingKeys.has(key);
+    const artHtml = item.imageUrl
+      ? `<img class="feed-card-art" src="${esc(item.imageUrl)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="feed-card-art-placeholder" style="display:none">🎵</div>`
+      : `<div class="feed-card-art-placeholder">🎵</div>`;
+    return `<div class="feed-card${isNew && existingKeys.size > 0 ? ' fade-in' : ''}" data-feed-key="${esc(key)}">
+      ${artHtml}
+      <div class="feed-card-body">
+        <span class="feed-card-user" onclick="openUserProfile('${esc(username)}')">${esc(username)}</span>
+        <div class="feed-card-title">${esc(item.title)}</div>
+        <div class="feed-card-artist">${esc(item.artist)}</div>
+        <div class="feed-card-time">${_timeAgo(item.ratedAt)}</div>
+      </div>
+      <div class="feed-card-score" style="color:${scoreColor(item.score)}">${fmt(item.score)}</div>
+    </div>`;
+  }).join('');
+
   const hasMore = allItems.length > communityFeedLimit;
-  feedEl.innerHTML = feedHTML
-    || '<div class="empty-state" style="padding:2rem"><div class="empty-icon">🌐</div><div class="empty-text">No ratings yet.</div></div>';
-  if (hasMore) {
-    const btn = document.createElement('button');
-    btn.className = 'feed-load-more';
-    btn.textContent = 'Show more';
-    btn.onclick = () => { communityFeedLimit += 20; _renderCommunityFeed(); };
-    feedEl.appendChild(btn);
+
+  // If there are existing cards, fade them out first then swap in
+  const existingCards = feedEl.querySelectorAll('.feed-card');
+  if (existingCards.length > 0 && existingKeys.size > 0) {
+    // Fade out cards that are leaving
+    existingCards.forEach(card => {
+      const key = card.dataset.feedKey;
+      if (!newKeys.has(key)) card.classList.add('fade-out');
+    });
+    setTimeout(() => {
+      feedEl.innerHTML = feedHTML
+        || '<div class="empty-state" style="padding:2rem"><div class="empty-icon">🌐</div><div class="empty-text">No ratings yet.</div></div>';
+      if (hasMore) {
+        const btn = document.createElement('button');
+        btn.className = 'feed-load-more';
+        btn.textContent = 'Show more';
+        btn.onclick = () => { communityFeedLimit += 20; _renderCommunityFeed(); };
+        feedEl.appendChild(btn);
+      }
+    }, 300);
+  } else {
+    feedEl.innerHTML = feedHTML
+      || '<div class="empty-state" style="padding:2rem"><div class="empty-icon">🌐</div><div class="empty-text">No ratings yet.</div></div>';
+    if (hasMore) {
+      const btn = document.createElement('button');
+      btn.className = 'feed-load-more';
+      btn.textContent = 'Show more';
+      btn.onclick = () => { communityFeedLimit += 20; _renderCommunityFeed(); };
+      feedEl.appendChild(btn);
+    }
   }
 }
 
@@ -1985,6 +2079,8 @@ function setSlider(sliderId, valId, value) {
 let ratings = []; // loaded from Supabase after login
 let sortMode = 'score_desc';
 let searchQuery = '';
+let scoreFilterMin = null; // null = no filter
+let scoreFilterMax = null;
 let spotifyToken = null;
 let tokenExpiry = 0;
 let currentFetched = null;
@@ -2191,6 +2287,11 @@ async function adminEditUser() {
     if (!res.ok || json.error) { setAdminStatus('Error: ' + (json.error || res.status), false); return; }
     const { error } = await _sb.from('profiles').update({ username: newUsername }).eq('id', profile.id);
     if (error) { setAdminStatus('Error updating username: ' + error.message, false); return; }
+    // Re-key the profiles cache so the new username is immediately reflected everywhere
+    if (_profilesCache?.[target]) {
+      _profilesCache[newUsername] = { ..._profilesCache[target], username: newUsername };
+      delete _profilesCache[target];
+    }
     // Re-key the community ratings cache so ratings still appear under the new username
     if (_communityRatingsCache[target]) {
       _communityRatingsCache[newUsername] = _communityRatingsCache[target];
@@ -2201,7 +2302,7 @@ async function adminEditUser() {
       _currentUsername = newUsername;
       const uBarName = document.getElementById('userBarName');
       if (uBarName) uBarName.innerHTML = newUsername + (_isAdmin ? ' <span>admin</span>' : '');
-      const uBarLetter = document.getElementById('userBarLetter');
+      const uBarLetter = document.getElementById('userBarAvatarLetter');
       if (uBarLetter) uBarLetter.textContent = newUsername[0].toUpperCase();
       _saveSession(_currentUserId, newUsername);
     }
@@ -2579,6 +2680,22 @@ function exportCSV() {
 // ── Rankings ──────────────────────────────────────────────
 function setSortMode(m) { sortMode = m; renderRankings(); }
 
+function setScoreFilter(min, max) {
+  scoreFilterMin = (min !== '' && min !== null && !isNaN(min)) ? parseFloat(min) : null;
+  scoreFilterMax = (max !== '' && max !== null && !isNaN(max)) ? parseFloat(max) : null;
+  renderRankings();
+}
+
+function clearScoreFilter() {
+  scoreFilterMin = null;
+  scoreFilterMax = null;
+  const minEl = document.getElementById('scoreFilterMin');
+  const maxEl = document.getElementById('scoreFilterMax');
+  if (minEl) minEl.value = '';
+  if (maxEl) maxEl.value = '';
+  renderRankings();
+}
+
 function renderRankings() {
   let list = [...ratings];
   if (sortMode === 'score_desc') list.sort((a, b) => b.score - a.score);
@@ -2588,12 +2705,17 @@ function renderRankings() {
 
   const statsBar = document.getElementById('statsBar');
   const el = document.getElementById('rankingsList');
+  const filterRow = document.getElementById('scoreFilterRow');
 
   if (!ratings.length) {
     statsBar.style.display = 'none';
+    if (filterRow) filterRow.style.display = 'none';
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">🎼</div><div class="empty-text">Your rankings are empty.<br>Head to Add Music to start rating tracks.</div></div>`;
     return;
   }
+
+  // Show filter row
+  if (filterRow) filterRow.style.display = 'flex';
 
   const avg = (ratings.reduce((s, r) => s + r.score, 0) / ratings.length).toFixed(1);
   statsBar.style.display = 'flex';
@@ -2619,20 +2741,47 @@ function renderRankings() {
   setTimeout(() => animateCount(document.getElementById('sbn-perfect'), perfectCount, dur,       false), 360);
 
   // Apply search filter
-  const filtered = searchQuery
+  let filtered = searchQuery
     ? list.filter(item =>
         item.title.toLowerCase().includes(searchQuery) ||
         item.artist.toLowerCase().includes(searchQuery) ||
         (item.album||'').toLowerCase().includes(searchQuery))
     : list;
 
+  // Apply score range filter
+  const hasScoreFilter = scoreFilterMin !== null || scoreFilterMax !== null;
+  if (hasScoreFilter) {
+    filtered = filtered.filter(item => {
+      const s = item.score;
+      if (scoreFilterMin !== null && s < scoreFilterMin) return false;
+      if (scoreFilterMax !== null && s > scoreFilterMax) return false;
+      return true;
+    });
+  }
+
+  // Update filter row active state and count badge
+  if (filterRow) {
+    filterRow.classList.toggle('active', hasScoreFilter);
+    const countEl = document.getElementById('scoreFilterCount');
+    if (countEl) {
+      if (hasScoreFilter) {
+        countEl.style.display = '';
+        countEl.textContent = `${filtered.length} shown`;
+      } else {
+        countEl.style.display = 'none';
+      }
+    }
+    const clearBtn = document.getElementById('scoreFilterClearBtn');
+    if (clearBtn) clearBtn.style.display = hasScoreFilter ? '' : 'none';
+  }
+
   if (!filtered.length) {
-    el.innerHTML = `<div class="no-results">No results for "<strong>${esc(searchQuery)}</strong>"</div>`;
+    el.innerHTML = `<div class="no-results">No results${hasScoreFilter ? ' in that score range' : ` for "<strong>${esc(searchQuery)}</strong>"`}</div>`;
     return;
   }
 
   el.innerHTML = filtered.map((item, i) => {
-    const posClass = sortMode === 'score_desc' && !searchQuery ? (i===0?' gold':i===1?' silver':i===2?' bronze':'') : '';
+    const posClass = sortMode === 'score_desc' && !searchQuery && !hasScoreFilter ? (i===0?' gold':i===1?' silver':i===2?' bronze':'') : '';
     const safeItem = JSON.stringify(item).replace(/"/g, '&quot;');
     const artHtml = item.imageUrl
       ? `<div class="rank-art-wrap"><div class="img-shimmer-bg"></div><img src="${esc(item.imageUrl)}" alt="" onload="this.classList.add('loaded')" onerror="this.parentElement.querySelector('.img-shimmer-bg').style.display='none';this.style.opacity='1'"></div>`
