@@ -1220,14 +1220,15 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
             <div class="slider-row">
               <div class="slider-val" id="sliderVal">—<span>/10</span></div>
               <div class="slider-wrap">
-                <input class="rating-slider" id="ratingSlider" type="range" min="1" max="10" step="0.5" value="5"
+                <input class="rating-slider" id="ratingSlider" type="range" min="0" max="10" step="0.5" value="5"
                   oninput="onSliderInput(this, 'sliderVal', 'rateSaveBtn')">
                 <div class="slider-ticks">
-                  <span class="slider-tick">1</span><span class="slider-tick">2</span>
-                  <span class="slider-tick">3</span><span class="slider-tick">4</span>
-                  <span class="slider-tick">5</span><span class="slider-tick">6</span>
-                  <span class="slider-tick">7</span><span class="slider-tick">8</span>
-                  <span class="slider-tick">9</span><span class="slider-tick">10</span>
+                  <span class="slider-tick">0</span><span class="slider-tick">1</span>
+                  <span class="slider-tick">2</span><span class="slider-tick">3</span>
+                  <span class="slider-tick">4</span><span class="slider-tick">5</span>
+                  <span class="slider-tick">6</span><span class="slider-tick">7</span>
+                  <span class="slider-tick">8</span><span class="slider-tick">9</span>
+                  <span class="slider-tick">10</span>
                 </div>
               </div>
             </div>
@@ -1908,8 +1909,8 @@ function animateCount(el, target, duration, isFloat) {
 
 // Score → smooth red→yellow→green gradient
 function scoreColor(score) {
-  const s = Math.max(1, Math.min(10, Number(score)));
-  const t = (s - 1) / 9; // 0 at 1, 1 at 10
+  const s = Math.max(0, Math.min(10, Number(score)));
+  const t = s / 10; // 0 at 1, 1 at 10
   // Red #e05c5c → Yellow #e8c95a → Green #5dba7a
   let r, g, b;
   if (t < 0.5) {
@@ -1931,7 +1932,7 @@ function ringHTML(score) {
   const s = Number(score);
   const r = 22;
   const circ = 2 * Math.PI * r;
-  const pct = (s - 1) / 9; // 1→0%, 10→100%
+  const pct = s / 10; // 1→0%, 10→100%
   const offset = circ * (1 - pct);
   const color = scoreColor(s);
   return `
@@ -1954,7 +1955,7 @@ function ringHTML(score) {
 // Slider fill + display update
 function onSliderInput(slider, valId, saveBtnId) {
   const v = parseFloat(slider.value);
-  const pct = ((v - 1) / 9) * 100;
+  const pct = (v / 10) * 100;
   slider.style.setProperty('--pct', pct + '%');
   const valEl = document.getElementById(valId);
   if (valEl) valEl.innerHTML = fmt(v) + '<span>/10</span>';
@@ -1972,7 +1973,7 @@ function setSlider(sliderId, valId, value) {
   const slider = document.getElementById(sliderId);
   if (!slider) return;
   slider.value = value;
-  const pct = ((value - 1) / 9) * 100;
+  const pct = (value / 10) * 100;
   slider.style.setProperty('--pct', pct + '%');
   const valEl = document.getElementById(valId);
   if (valEl) valEl.innerHTML = fmt(value) + '<span>/10</span>';
@@ -2932,7 +2933,7 @@ function _buildPanelHTML(ai, allTracks) {
           <button class="album-track-edit" onclick="toggleAlbumTrackSlider(${ai},${ti},event)" title="Adjust">✎</button>
         </div>
         <div class="album-track-inline-slider" id="atsl-${ai}-${ti}">
-          <input class="rating-slider" style="flex:1" type="range" min="1" max="10" step="0.5" value="${rated.score}"
+          <input class="rating-slider" style="flex:1" type="range" min="0" max="10" step="0.5" value="${rated.score}"
             id="ats-${ai}-${ti}" oninput="onAlbumTrackSlider(this,${ai},${ti})">
           <span class="album-track-inline-val" id="atsv-${ai}-${ti}">${fmt(rated.score)}</span>
           <span class="album-track-inline-guide" id="atsg-${ai}-${ti}" style="color:${scoreColor(rated.score)}">${getRatingGuide(rated.score).label}</span>
@@ -2952,7 +2953,7 @@ function _buildPanelHTML(ai, allTracks) {
           <button class="album-track-edit album-track-add" onclick="toggleAlbumTrackSlider(${ai},${ti},event)" title="Rate this track">+</button>
         </div>
         <div class="album-track-inline-slider" id="atsl-${ai}-${ti}">
-          <input class="rating-slider" style="flex:1" type="range" min="1" max="10" step="0.5" value="5"
+          <input class="rating-slider" style="flex:1" type="range" min="0" max="10" step="0.5" value="5"
             id="ats-${ai}-${ti}" oninput="onAlbumTrackSlider(this,${ai},${ti})">
           <span class="album-track-inline-val" id="atsv-${ai}-${ti}">5</span>
           <span class="album-track-inline-guide" id="atsg-${ai}-${ti}" style="color:${scoreColor(5)}">${getRatingGuide(5).label}</span>
@@ -3082,7 +3083,7 @@ async function _openBreak(ai, immediate) {
   tracksToShow.forEach((t, ti) => {
     if (t.ratedEntry) {
       const s = document.getElementById(`ats-${ai}-${ti}`);
-      if (s) s.style.setProperty('--pct', (((t.ratedEntry.score-1)/9)*100)+'%');
+      if (s) s.style.setProperty('--pct', (t.ratedEntry.score/10*100)+'%');
     }
   });
 }
@@ -3102,7 +3103,7 @@ function _buildTrackRows(ai, tracksToShow) {
           <button class="album-track-edit" onclick="toggleAlbumTrackSlider(${ai},${ti},event)" title="Adjust">✎</button>
         </div>
         <div class="album-track-inline-slider" id="atsl-${ai}-${ti}">
-          <input class="rating-slider" style="flex:1" type="range" min="1" max="10" step="0.5" value="${rated.score}"
+          <input class="rating-slider" style="flex:1" type="range" min="0" max="10" step="0.5" value="${rated.score}"
             id="ats-${ai}-${ti}" oninput="onAlbumTrackSlider(this,${ai},${ti})">
           <span class="album-track-inline-val" id="atsv-${ai}-${ti}">${fmt(rated.score)}</span>
           <span class="album-track-inline-guide" id="atsg-${ai}-${ti}" style="color:${scoreColor(rated.score)}">${getRatingGuide(rated.score).label}</span>
@@ -3121,7 +3122,7 @@ function _buildTrackRows(ai, tracksToShow) {
           <button class="album-track-edit album-track-add" onclick="toggleAlbumTrackSlider(${ai},${ti},event)" title="Rate this track">+</button>
         </div>
         <div class="album-track-inline-slider" id="atsl-${ai}-${ti}">
-          <input class="rating-slider" style="flex:1" type="range" min="1" max="10" step="0.5" value="5"
+          <input class="rating-slider" style="flex:1" type="range" min="0" max="10" step="0.5" value="5"
             id="ats-${ai}-${ti}" oninput="onAlbumTrackSlider(this,${ai},${ti})">
           <span class="album-track-inline-val" id="atsv-${ai}-${ti}">5</span>
           <span class="album-track-inline-guide" id="atsg-${ai}-${ti}" style="color:${scoreColor(5)}">${getRatingGuide(5).label}</span>
@@ -3190,14 +3191,14 @@ function toggleAlbumTrackSlider(ai, ti, e) {
     if (s && !s.dataset.initDone) {
       s.dataset.initDone = '1';
       const v = parseFloat(s.value);
-      s.style.setProperty('--pct', (((v-1)/9)*100)+'%');
+      s.style.setProperty('--pct', (v/10*100)+'%');
     }
   }
 }
 
 function onAlbumTrackSlider(input, ai, ti) {
   const v = parseFloat(input.value);
-  input.style.setProperty('--pct', (((v-1)/9)*100)+'%');
+  input.style.setProperty('--pct', (v/10*100)+'%');
   document.getElementById(`atsv-${ai}-${ti}`).textContent = fmt(v);
   const guide = document.getElementById(`atsg-${ai}-${ti}`);
   if (guide) {
@@ -3841,14 +3842,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     <div class="slider-row">
       <div class="slider-val" id="modalSliderVal">—<span>/10</span></div>
       <div class="slider-wrap">
-        <input class="rating-slider" id="modalRatingSlider" type="range" min="1" max="10" step="0.5" value="5"
+        <input class="rating-slider" id="modalRatingSlider" type="range" min="0" max="10" step="0.5" value="5"
           oninput="onSliderInput(this, 'modalSliderVal', null)">
         <div class="slider-ticks">
-          <span class="slider-tick">1</span><span class="slider-tick">2</span>
-          <span class="slider-tick">3</span><span class="slider-tick">4</span>
-          <span class="slider-tick">5</span><span class="slider-tick">6</span>
-          <span class="slider-tick">7</span><span class="slider-tick">8</span>
-          <span class="slider-tick">9</span><span class="slider-tick">10</span>
+          <span class="slider-tick">0</span><span class="slider-tick">1</span>
+          <span class="slider-tick">2</span><span class="slider-tick">3</span>
+          <span class="slider-tick">4</span><span class="slider-tick">5</span>
+          <span class="slider-tick">6</span><span class="slider-tick">7</span>
+          <span class="slider-tick">8</span><span class="slider-tick">9</span>
+          <span class="slider-tick">10</span>
         </div>
       </div>
     </div>
