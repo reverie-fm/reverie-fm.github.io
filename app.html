@@ -261,7 +261,7 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .filter-panel-title{font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;
   letter-spacing:.14em;color:var(--accent);opacity:.7;margin-bottom:.85rem}
 /* ── Dual-handle range slider ── */
-.dual-range-wrap{position:relative;height:28px;margin:1.6rem 0 1.5rem}
+.dual-range-wrap{position:relative;height:28px;margin:2rem 0 1rem}
 .dual-range-track{
   position:absolute;top:50%;left:0;right:0;height:5px;border-radius:3px;
   transform:translateY(-50%);background:var(--surface3);
@@ -270,16 +270,8 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   position:absolute;top:50%;height:5px;border-radius:3px;
   background:var(--accent);transform:translateY(-50%);pointer-events:none;
 }
-/* min label sits below the track */
-.dual-thumb-label-min{
-  position:absolute;bottom:-1.5rem;
-  font-family:'DM Mono',monospace;font-size:.68rem;
-  color:var(--accent2);background:var(--surface2);
-  border:1px solid var(--border2);border-radius:5px;
-  padding:.1rem .32rem;pointer-events:none;white-space:nowrap;
-  transform:translateX(-50%);
-}
-/* max label sits above the track */
+/* both labels sit above the track; JS nudges them apart when close */
+.dual-thumb-label-min,
 .dual-thumb-label-max{
   position:absolute;top:-1.6rem;
   font-family:'DM Mono',monospace;font-size:.68rem;
@@ -287,6 +279,16 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   border:1px solid var(--border2);border-radius:5px;
   padding:.1rem .32rem;pointer-events:none;white-space:nowrap;
   transform:translateX(-50%);
+  transition:left .08s ease;
+}
+/* single joined label */
+.dual-thumb-label-joined{
+  position:absolute;top:-1.6rem;
+  font-family:'DM Mono',monospace;font-size:.68rem;
+  color:var(--accent2);background:var(--surface2);
+  border:1px solid var(--border2);border-radius:5px;
+  padding:.1rem .32rem;pointer-events:none;white-space:nowrap;
+  transform:translateX(-50%);display:none;
 }
 .dual-range-input{
   position:absolute;top:50%;width:100%;
@@ -308,6 +310,19 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   background:var(--accent2);border:2px solid var(--bg);
   box-shadow:0 0 0 3px rgba(200,169,110,.25);
   cursor:pointer;pointer-events:auto;
+}
+/* custom joined thumb — sits on top of both inputs when they meet */
+.dual-joined-thumb{
+  position:absolute;top:50%;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--accent2);border:2px solid var(--bg);
+  box-shadow:0 0 0 3px rgba(200,169,110,.25);
+  transform:translate(-50%,-50%);
+  cursor:ew-resize;display:none;z-index:10;
+  transition:box-shadow .15s;
+}
+.dual-joined-thumb:hover,.dual-joined-thumb.dragging{
+  box-shadow:0 0 0 5px rgba(200,169,110,.3);
 }
 .filter-panel-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.25rem}
 .filter-count-badge{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--accent);
@@ -1534,8 +1549,10 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
             <div class="dual-range-fill" id="dualRangeFill"></div>
             <div class="dual-thumb-label-min" id="thumbLabelMin">0</div>
             <div class="dual-thumb-label-max" id="thumbLabelMax">10</div>
+            <div class="dual-thumb-label-joined" id="thumbLabelJoined">0</div>
             <input class="dual-range-input" id="scoreRangeMin" type="range" min="0" max="10" step="0.5" value="0">
             <input class="dual-range-input" id="scoreRangeMax" type="range" min="0" max="10" step="0.5" value="10">
+            <div class="dual-joined-thumb" id="dualJoinedThumb"></div>
           </div>
           <div class="filter-panel-footer" style="margin-top:1.8rem">
             <span class="filter-count-badge" id="scoreFilterCount"></span>
@@ -2969,98 +2986,171 @@ function _closeScorePanel(e) {
 }
 
 // ── Dual-range slider ─────────────────────────────────────
-// When thumbs are joined, the next drag direction decides which thumb moves.
-// Min label appears below the track; max label appears above.
-
-let _drLastDir = null; // 'min' | 'max' — which thumb last moved when joined
+// When thumbs meet, native inputs are hidden and a single custom
+// drag thumb takes over. Dragging right → max moves right;
+// dragging left → min moves left. Only one label shown when joined.
 
 function _initDualRange() {
-  const minEl = document.getElementById('scoreRangeMin');
-  const maxEl = document.getElementById('scoreRangeMax');
+  const minEl    = document.getElementById('scoreRangeMin');
+  const maxEl    = document.getElementById('scoreRangeMax');
+  const joinThumb= document.getElementById('dualJoinedThumb');
   if (!minEl || !maxEl || minEl._drInited) return;
   minEl._drInited = true;
 
-  // On input, decide which thumb moves when joined
+  // Native input handlers (used when NOT joined)
   minEl.addEventListener('input', () => {
     let lo = parseFloat(minEl.value);
     let hi = parseFloat(maxEl.value);
     if (lo > hi) { lo = hi; minEl.value = lo; }
-    scoreFilterMin = lo;
-    scoreFilterMax = hi;
+    scoreFilterMin = lo; scoreFilterMax = hi;
     _updateDualRangeUI(lo, hi);
     renderRankings();
   });
-
   maxEl.addEventListener('input', () => {
     let lo = parseFloat(minEl.value);
     let hi = parseFloat(maxEl.value);
     if (hi < lo) { hi = lo; maxEl.value = hi; }
-    scoreFilterMin = lo;
-    scoreFilterMax = hi;
+    scoreFilterMin = lo; scoreFilterMax = hi;
     _updateDualRangeUI(lo, hi);
     renderRankings();
   });
 
-  // Smart joined-thumb: on mousedown/touchstart when thumbs are equal,
-  // peek at pointer X vs track centre to decide which input goes on top
-  function resolveJoin(e) {
-    const lo = parseFloat(minEl.value);
-    const hi = parseFloat(maxEl.value);
-    if (lo !== hi) return; // not joined, no special handling needed
+  // Custom joined-thumb drag
+  let _dragStartX = null;
+  let _dragStartVal = null;
 
-    const wrap  = document.getElementById('dualRangeWrap');
-    const rect  = wrap.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const pct   = (clientX - rect.left) / rect.width;
-    const val   = pct * 10; // 0–10 scale
-
-    // If pointer is to the right of joined point, the user wants to drag max right
-    // so put maxEl on top (higher z-index). Otherwise put minEl on top.
-    if (val >= lo) {
-      maxEl.style.zIndex = 3;
-      minEl.style.zIndex = 2;
-    } else {
-      minEl.style.zIndex = 3;
-      maxEl.style.zIndex = 2;
-    }
+  function onJoinStart(e) {
+    e.preventDefault();
+    _dragStartX   = e.touches ? e.touches[0].clientX : e.clientX;
+    _dragStartVal = parseFloat(minEl.value); // lo === hi when joined
+    joinThumb.classList.add('dragging');
+    document.addEventListener('mousemove', onJoinMove);
+    document.addEventListener('touchmove',  onJoinMove, { passive: false });
+    document.addEventListener('mouseup',   onJoinEnd);
+    document.addEventListener('touchend',  onJoinEnd);
   }
 
-  minEl.addEventListener('mousedown',  resolveJoin);
-  maxEl.addEventListener('mousedown',  resolveJoin);
-  minEl.addEventListener('touchstart', resolveJoin, { passive: true });
-  maxEl.addEventListener('touchstart', resolveJoin, { passive: true });
+  function onJoinMove(e) {
+    if (_dragStartX === null) return;
+    const wrap   = document.getElementById('dualRangeWrap');
+    const rect   = wrap.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const dx     = clientX - _dragStartX;           // px delta
+    const range  = rect.width;                       // track width in px
+    const valDelta = (dx / range) * 10;              // map to 0–10 scale
+    const STEP   = 0.5;
+
+    // Snap to nearest 0.5
+    const snap = v => Math.round(v / STEP) * STEP;
+    const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+
+    if (valDelta > 0) {
+      // Dragging right → move max
+      const newHi = clamp(snap(_dragStartVal + valDelta), _dragStartVal, 10);
+      scoreFilterMax = newHi;
+      scoreFilterMin = _dragStartVal;
+      maxEl.value = newHi;
+      minEl.value = _dragStartVal;
+    } else {
+      // Dragging left → move min
+      const newLo = clamp(snap(_dragStartVal + valDelta), 0, _dragStartVal);
+      scoreFilterMin = newLo;
+      scoreFilterMax = _dragStartVal;
+      minEl.value = newLo;
+      maxEl.value = _dragStartVal;
+    }
+    _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
+    renderRankings();
+  }
+
+  function onJoinEnd() {
+    _dragStartX = null;
+    joinThumb.classList.remove('dragging');
+    document.removeEventListener('mousemove', onJoinMove);
+    document.removeEventListener('touchmove',  onJoinMove);
+    document.removeEventListener('mouseup',   onJoinEnd);
+    document.removeEventListener('touchend',  onJoinEnd);
+  }
+
+  joinThumb.addEventListener('mousedown',  onJoinStart);
+  joinThumb.addEventListener('touchstart', onJoinStart, { passive: false });
 }
 
 function _updateDualRangeUI(lo, hi) {
-  const fill    = document.getElementById('dualRangeFill');
-  const btn     = document.getElementById('scoreFilterBtn');
-  const lblMin  = document.getElementById('thumbLabelMin');
-  const lblMax  = document.getElementById('thumbLabelMax');
-  const isDefault = lo === 0 && hi === 10;
+  const fill        = document.getElementById('dualRangeFill');
+  const btn         = document.getElementById('scoreFilterBtn');
+  const lblMin      = document.getElementById('thumbLabelMin');
+  const lblMax      = document.getElementById('thumbLabelMax');
+  const lblJoined   = document.getElementById('thumbLabelJoined');
+  const joinThumb   = document.getElementById('dualJoinedThumb');
+  const minEl       = document.getElementById('scoreRangeMin');
+  const maxEl       = document.getElementById('scoreRangeMax');
+  const wrap        = document.getElementById('dualRangeWrap');
+  const isDefault   = lo === 0 && hi === 10;
+  const joined      = lo === hi;
 
   const leftPct  = (lo / 10) * 100;
   const rightPct = (hi / 10) * 100;
+  const clamp    = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+  const fmt      = v => v % 1 === 0 ? String(v) : v.toFixed(1);
 
-  if (fill) {
-    fill.style.left  = leftPct + '%';
-    fill.style.width = (rightPct - leftPct) + '%';
-  }
+  if (fill) { fill.style.left = leftPct + '%'; fill.style.width = (rightPct - leftPct) + '%'; }
 
-  // Clamp label so it never overflows the track edges
-  const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
-  if (lblMin) {
-    lblMin.style.left   = clamp(leftPct, 2, 96) + '%';
-    lblMin.textContent  = lo % 1 === 0 ? lo : lo.toFixed(1);
-  }
-  if (lblMax) {
-    lblMax.style.left   = clamp(rightPct, 4, 98) + '%';
-    lblMax.textContent  = hi % 1 === 0 ? hi : hi.toFixed(1);
+  if (joined) {
+    if (minEl) minEl.style.pointerEvents = 'none';
+    if (maxEl) maxEl.style.pointerEvents = 'none';
+    if (joinThumb) { joinThumb.style.display = 'block'; joinThumb.style.left = leftPct + '%'; }
+    if (lblMin)    lblMin.style.display    = 'none';
+    if (lblMax)    lblMax.style.display    = 'none';
+    if (lblJoined) {
+      lblJoined.style.display = 'block';
+      lblJoined.style.left    = clamp(leftPct, 3, 97) + '%';
+      lblJoined.textContent   = fmt(lo);
+    }
+  } else {
+    if (minEl) minEl.style.pointerEvents = 'auto';
+    if (maxEl) maxEl.style.pointerEvents = 'auto';
+    if (joinThumb) joinThumb.style.display = 'none';
+    if (lblJoined) lblJoined.style.display = 'none';
+
+    // Nudge labels apart when close — estimate label width in % of track
+    const trackW   = wrap ? wrap.getBoundingClientRect().width : 220;
+    // approx label width for a 2-char string ~28px, 3-char ~36px
+    const lwMin    = (fmt(lo).length <= 1 ? 24 : fmt(lo).length <= 3 ? 30 : 36) / trackW * 100;
+    const lwMax    = (fmt(hi).length <= 1 ? 24 : fmt(hi).length <= 3 ? 30 : 36) / trackW * 100;
+    const minHalf  = lwMin / 2;
+    const maxHalf  = lwMax / 2;
+    // gap needed so label edges don't touch (add 3px buffer)
+    const bufPct   = 3 / trackW * 100;
+    const needed   = minHalf + maxHalf + bufPct;
+    const diff     = rightPct - leftPct;
+
+    let loPos = leftPct;
+    let hiPos = rightPct;
+
+    if (diff < needed) {
+      // Nudge each label outward by half the overlap
+      const overlap = needed - diff;
+      loPos = leftPct  - overlap / 2;
+      hiPos = rightPct + overlap / 2;
+    }
+
+    if (lblMin) {
+      lblMin.style.display  = 'block';
+      lblMin.style.left     = clamp(loPos, 2, 94) + '%';
+      lblMin.textContent    = fmt(lo);
+    }
+    if (lblMax) {
+      lblMax.style.display  = 'block';
+      lblMax.style.left     = clamp(hiPos, 6, 98) + '%';
+      lblMax.textContent    = fmt(hi);
+    }
   }
 
   if (btn) btn.classList.toggle('active', !isDefault);
 }
 
-function onDualRangeInput() {} // legacy shim — events wired in _initDualRange
+function onDualRangeInput() {} // legacy shim
 function stepScore() {}        // legacy shim
 function _updateStepperUI() {} // legacy shim
 function _buildPillGrid() {}   // legacy shim
