@@ -300,7 +300,7 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   background:var(--accent2);border:2px solid var(--bg);
   box-shadow:0 0 0 3px rgba(200,169,110,.25);
   transform:translate(-50%,-50%);
-  cursor:ew-resize;z-index:5;
+  cursor:grab;z-index:5;
   transition:box-shadow .15s;
 }
 .dual-custom-thumb:hover{box-shadow:0 0 0 5px rgba(200,169,110,.3)}
@@ -311,11 +311,11 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   background:var(--accent2);border:2px solid var(--bg);
   box-shadow:0 0 0 3px rgba(200,169,110,.25);
   transform:translate(-50%,-50%);
-  cursor:ew-resize;display:none;z-index:10;
+  cursor:grab;display:none;z-index:10;
   transition:box-shadow .15s;
 }
 .dual-joined-thumb:hover,.dual-joined-thumb.dragging{
-  box-shadow:0 0 0 5px rgba(200,169,110,.3);
+  box-shadow:0 0 0 5px rgba(200,169,110,.3);cursor:grabbing;
 }
 .filter-panel-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.25rem}
 .filter-count-badge{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--accent);
@@ -3047,9 +3047,9 @@ function _initDualRange() {
     thumb.addEventListener('mousedown', makeDrag((cx) => {
       const curMax = scoreFilterMax ?? MAX;
       const lo = clamp(xToVal(cx), MIN, curMax);
-      minEl.value = lo;
       scoreFilterMin = lo;
       scoreFilterMax = curMax;
+      minEl.value = lo;
       maxEl.value = curMax;
       _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
       renderRankings();
@@ -3057,9 +3057,9 @@ function _initDualRange() {
     thumb.addEventListener('touchstart', makeDrag((cx) => {
       const curMax = scoreFilterMax ?? MAX;
       const lo = clamp(xToVal(cx), MIN, curMax);
-      minEl.value = lo;
       scoreFilterMin = lo;
       scoreFilterMax = curMax;
+      minEl.value = lo;
       maxEl.value = curMax;
       _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
       renderRankings();
@@ -3075,9 +3075,9 @@ function _initDualRange() {
     thumb.addEventListener('mousedown', makeDrag((cx) => {
       const curMin = scoreFilterMin ?? MIN;
       const hi = clamp(xToVal(cx), curMin, MAX);
-      maxEl.value = hi;
       scoreFilterMin = curMin;
       scoreFilterMax = hi;
+      maxEl.value = hi;
       minEl.value = curMin;
       _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
       renderRankings();
@@ -3085,9 +3085,9 @@ function _initDualRange() {
     thumb.addEventListener('touchstart', makeDrag((cx) => {
       const curMin = scoreFilterMin ?? MIN;
       const hi = clamp(xToVal(cx), curMin, MAX);
-      maxEl.value = hi;
       scoreFilterMin = curMin;
       scoreFilterMax = hi;
+      maxEl.value = hi;
       minEl.value = curMin;
       _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
       renderRankings();
