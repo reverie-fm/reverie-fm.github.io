@@ -3115,18 +3115,19 @@ function _initDualRange() {
   }
   function onJoinMove(e) {
     if (_dragStartX === null) return;
-    const rect     = wrap.getBoundingClientRect();
-    const cx       = e.touches ? e.touches[0].clientX : e.clientX;
-    const valDelta = ((cx - _dragStartX) / rect.width) * 10;
-    if (valDelta > 0) {
-      const newHi = clamp(snap(_dragStartVal + valDelta), _dragStartVal, MAX);
-      scoreFilterMin = _dragStartVal; scoreFilterMax = newHi;
-      minEl.value = _dragStartVal;    maxEl.value = newHi;
+    const cx  = e.touches ? e.touches[0].clientX : e.clientX;
+    const val = xToVal(cx);
+    if (val >= _dragStartVal) {
+      // dragging right → min stays locked, max moves freely
+      scoreFilterMin = _dragStartVal;
+      scoreFilterMax = clamp(val, _dragStartVal, MAX);
     } else {
-      const newLo = clamp(snap(_dragStartVal + valDelta), MIN, _dragStartVal);
-      scoreFilterMin = newLo; scoreFilterMax = _dragStartVal;
-      minEl.value = newLo;   maxEl.value = _dragStartVal;
+      // dragging left → max stays locked, min moves freely
+      scoreFilterMin = clamp(val, MIN, _dragStartVal);
+      scoreFilterMax = _dragStartVal;
     }
+    minEl.value = scoreFilterMin;
+    maxEl.value = scoreFilterMax;
     _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
     renderRankings();
   }
