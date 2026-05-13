@@ -260,50 +260,34 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .filter-dropdown-panel.open{display:block;animation:panelFadeIn .15s ease both}
 .filter-panel-title{font-family:'DM Mono',monospace;font-size:.58rem;text-transform:uppercase;
   letter-spacing:.14em;color:var(--accent);opacity:.7;margin-bottom:.85rem}
-/* ── Dual-handle range slider ── */
-.dual-range-wrap{position:relative;height:44px;margin-bottom:.5rem;margin-top:1.5rem}
-.dual-range-track{
-  position:absolute;top:50%;left:0;right:0;
-  height:5px;border-radius:3px;
-  transform:translateY(-50%);
-  background:var(--surface3);
+/* ── Score stepper filter ── */
+.score-stepper-wrap{display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem}
+.score-stepper-block{display:flex;flex-direction:column;align-items:center;gap:.3rem;flex:1}
+.score-stepper-label{font-family:'DM Mono',monospace;font-size:.55rem;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--muted);opacity:.8}
+.score-stepper-controls{display:flex;align-items:center;gap:0}
+.score-stepper-btn{
+  width:28px;height:28px;border-radius:7px;border:1px solid var(--border2);
+  background:var(--surface2);color:var(--accent2);font-size:1rem;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;font-family:'DM Mono',monospace;flex-shrink:0;
+  user-select:none;-webkit-user-select:none;
 }
-.dual-range-fill{
-  position:absolute;top:50%;height:5px;border-radius:3px;
-  background:var(--accent);transform:translateY(-50%);
-  pointer-events:none;
+.score-stepper-btn:hover{background:var(--surface3);border-color:var(--accent);color:var(--accent)}
+.score-stepper-btn:active{transform:scale(.9)}
+.score-stepper-btn:disabled{opacity:.25;cursor:not-allowed;transform:none}
+.score-stepper-val{
+  font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;
+  color:var(--accent2);min-width:2.6rem;text-align:center;line-height:1;
+  padding:0 .25rem;
 }
-/* floating labels above each thumb */
-.dual-thumb-label{
-  position:absolute;top:-1.6rem;
-  transform:translateX(-50%);
-  font-family:'DM Mono',monospace;font-size:.68rem;
-  color:var(--accent2);background:var(--surface2);
-  border:1px solid var(--border2);border-radius:5px;
-  padding:.1rem .32rem;pointer-events:none;white-space:nowrap;
-  transition:left .05s;
+.score-stepper-sep{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--muted);
+  opacity:.5;padding:0 .1rem;align-self:center;padding-top:.3rem}
+.score-stepper-bar{
+  width:100%;height:3px;border-radius:2px;background:var(--surface3);margin-top:.1rem;overflow:hidden;
 }
-.dual-range-input{
-  position:absolute;top:50%;width:100%;
-  -webkit-appearance:none;appearance:none;
-  height:5px;background:transparent;outline:none;
-  transform:translateY(-50%);pointer-events:none;
-  margin:0;
-}
-.dual-range-input::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;
-  width:18px;height:18px;border-radius:50%;
-  background:var(--accent2);border:2px solid var(--bg);
-  box-shadow:0 0 0 3px rgba(200,169,110,.25);
-  cursor:pointer;pointer-events:auto;
-  transition:transform .15s,box-shadow .15s;
-}
-.dual-range-input::-webkit-slider-thumb:hover{transform:scale(1.18);box-shadow:0 0 0 5px rgba(200,169,110,.3)}
-.dual-range-input::-moz-range-thumb{
-  width:18px;height:18px;border-radius:50%;
-  background:var(--accent2);border:2px solid var(--bg);
-  box-shadow:0 0 0 3px rgba(200,169,110,.25);
-  cursor:pointer;pointer-events:auto;
+.score-stepper-bar-fill{
+  height:100%;border-radius:2px;background:var(--accent);transition:width .2s ease;
 }
 .filter-panel-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.25rem}
 .filter-count-badge{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--accent);
@@ -1525,13 +1509,26 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
         </button>
         <div class="filter-dropdown-panel" id="scoreFilterPanel">
           <div class="filter-panel-title">Score Range</div>
-          <div class="dual-range-wrap">
-            <div class="dual-range-track"></div>
-            <div class="dual-range-fill" id="dualRangeFill"></div>
-            <div class="dual-thumb-label" id="thumbLabelMin">0</div>
-            <div class="dual-thumb-label" id="thumbLabelMax">10</div>
-            <input class="dual-range-input" id="scoreRangeMin" type="range" min="0" max="10" step="0.5" value="0" oninput="onDualRangeInput()">
-            <input class="dual-range-input" id="scoreRangeMax" type="range" min="0" max="10" step="0.5" value="10" oninput="onDualRangeInput()">
+          <div class="score-stepper-wrap">
+            <div class="score-stepper-block">
+              <div class="score-stepper-label">From</div>
+              <div class="score-stepper-controls">
+                <button class="score-stepper-btn" id="stepMinDec" onclick="stepScore('min',-1)" title="Decrease">−</button>
+                <div class="score-stepper-val" id="stepMinVal">0</div>
+                <button class="score-stepper-btn" id="stepMinInc" onclick="stepScore('min',1)" title="Increase">+</button>
+              </div>
+              <div class="score-stepper-bar"><div class="score-stepper-bar-fill" id="stepMinBar" style="width:0%"></div></div>
+            </div>
+            <div class="score-stepper-sep">—</div>
+            <div class="score-stepper-block">
+              <div class="score-stepper-label">To</div>
+              <div class="score-stepper-controls">
+                <button class="score-stepper-btn" id="stepMaxDec" onclick="stepScore('max',-1)" title="Decrease">−</button>
+                <div class="score-stepper-val" id="stepMaxVal">10</div>
+                <button class="score-stepper-btn" id="stepMaxInc" onclick="stepScore('max',1)" title="Increase">+</button>
+              </div>
+              <div class="score-stepper-bar"><div class="score-stepper-bar-fill" id="stepMaxBar" style="width:100%"></div></div>
+            </div>
           </div>
           <div class="filter-panel-footer">
             <span class="filter-count-badge" id="scoreFilterCount"></span>
@@ -2940,8 +2937,9 @@ function toggleScoreFilterPanel() {
   if (!panel) return;
   const isOpen = panel.classList.toggle('open');
   btn.classList.toggle('open', isOpen);
-  // Close when clicking outside
   if (isOpen) {
+    // Always sync stepper display to current filter state on open
+    _updateStepperUI(scoreFilterMin ?? 0, scoreFilterMax ?? 10);
     setTimeout(() => {
       document.addEventListener('click', _closeScorePanel, { once: true, capture: true });
     }, 0);
@@ -2958,59 +2956,58 @@ function _closeScorePanel(e) {
   }
 }
 
-function onDualRangeInput() {
-  const minEl = document.getElementById('scoreRangeMin');
-  const maxEl = document.getElementById('scoreRangeMax');
-  let lo = parseFloat(minEl.value);
-  let hi = parseFloat(maxEl.value);
-  // Allow same value (single score filter)
-  if (lo > hi) { lo = hi; minEl.value = lo; }
+function stepScore(which, dir) {
+  const STEP = 1, MIN = 0, MAX = 10;
+  let lo = scoreFilterMin ?? 0;
+  let hi = scoreFilterMax ?? 10;
+  if (which === 'min') {
+    lo = Math.min(Math.max(lo + dir * STEP, MIN), hi); // can't exceed hi
+  } else {
+    hi = Math.max(Math.min(hi + dir * STEP, MAX), lo); // can't go below lo
+  }
   scoreFilterMin = lo;
   scoreFilterMax = hi;
-  _updateDualRangeUI(lo, hi);
+  _updateStepperUI(lo, hi);
   renderRankings();
 }
 
-function _updateDualRangeUI(lo, hi) {
-  const fill   = document.getElementById('dualRangeFill');
-  const btn    = document.getElementById('scoreFilterBtn');
-  const lblMin = document.getElementById('thumbLabelMin');
-  const lblMax = document.getElementById('thumbLabelMax');
+function _updateStepperUI(lo, hi) {
   const isDefault = lo === 0 && hi === 10;
-  const leftPct  = (lo / 10) * 100;
-  const rightPct = (hi / 10) * 100;
-  if (fill) {
-    fill.style.left  = leftPct + '%';
-    fill.style.width = (rightPct - leftPct) + '%';
-  }
-  // Position floating labels above each thumb
-  // Clamp so label doesn't go off edge of the track
-  const thumbHalfPx = 9; // half of 18px thumb
-  if (lblMin) {
-    lblMin.style.left = `calc(${leftPct}% + ${thumbHalfPx * (1 - leftPct / 50)}px)`;
-    lblMin.textContent = lo % 1 === 0 ? lo : lo.toFixed(1);
-  }
-  if (lblMax) {
-    lblMax.style.left = `calc(${rightPct}% - ${thumbHalfPx * (rightPct / 50 - 1)}px)`;
-    lblMax.textContent = hi % 1 === 0 ? hi : hi.toFixed(1);
-  }
-  if (btn) btn.classList.toggle('active', !isDefault);
+  const minValEl  = document.getElementById('stepMinVal');
+  const maxValEl  = document.getElementById('stepMaxVal');
+  const minBar    = document.getElementById('stepMinBar');
+  const maxBar    = document.getElementById('stepMaxBar');
+  const minDec    = document.getElementById('stepMinDec');
+  const minInc    = document.getElementById('stepMinInc');
+  const maxDec    = document.getElementById('stepMaxDec');
+  const maxInc    = document.getElementById('stepMaxInc');
+  const btn       = document.getElementById('scoreFilterBtn');
+  if (minValEl) minValEl.textContent = lo;
+  if (maxValEl) maxValEl.textContent = hi;
+  if (minBar)   minBar.style.width   = (lo / 10 * 100) + '%';
+  if (maxBar)   maxBar.style.width   = (hi / 10 * 100) + '%';
+  if (minDec)   minDec.disabled = lo <= 0;
+  if (minInc)   minInc.disabled = lo >= hi;
+  if (maxDec)   maxDec.disabled = hi <= lo;
+  if (maxInc)   maxInc.disabled = hi >= 10;
+  if (btn)      btn.classList.toggle('active', !isDefault);
+}
+
+function onDualRangeInput() {
+  // legacy shim — not used with stepper but kept in case called elsewhere
 }
 
 function setScoreFilter(min, max) {
   scoreFilterMin = (min !== '' && min !== null && !isNaN(min)) ? parseFloat(min) : null;
   scoreFilterMax = (max !== '' && max !== null && !isNaN(max)) ? parseFloat(max) : null;
+  _updateStepperUI(scoreFilterMin ?? 0, scoreFilterMax ?? 10);
   renderRankings();
 }
 
 function clearScoreFilter() {
   scoreFilterMin = null;
   scoreFilterMax = null;
-  const minEl = document.getElementById('scoreRangeMin');
-  const maxEl = document.getElementById('scoreRangeMax');
-  if (minEl) minEl.value = '0';
-  if (maxEl) maxEl.value = '10';
-  _updateDualRangeUI(0, 10);
+  _updateStepperUI(0, 10);
   renderRankings();
 }
 
