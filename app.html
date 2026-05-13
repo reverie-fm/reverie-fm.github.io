@@ -2963,18 +2963,20 @@ function toggleScoreFilterPanel() {
     if (maxEl) maxEl.value = hi;
     _updateDualRangeUI(lo, hi);
     setTimeout(() => {
-      document.addEventListener('click', _closeScorePanel, { once: true, capture: true });
+      document.addEventListener('mousedown', _closeScorePanel, { once: true, capture: true });
     }, 0);
   }
 }
 function _closeScorePanel(e) {
+  // Don't close if a thumb drag just ended
   const wrap = document.getElementById('scoreFilterWrap');
+  if (wrap && wrap._anyDragging) return;
   if (wrap && !wrap.contains(e.target)) {
     document.getElementById('scoreFilterPanel')?.classList.remove('open');
     document.getElementById('scoreFilterBtn')?.classList.remove('open');
   } else if (wrap && wrap.contains(e.target)) {
-    // re-add listener if click was inside
-    document.addEventListener('click', _closeScorePanel, { once: true, capture: true });
+    // re-add listener if mousedown was inside
+    document.addEventListener('mousedown', _closeScorePanel, { once: true, capture: true });
   }
 }
 
@@ -3005,10 +3007,15 @@ function _initDualRange() {
     return clamp(snap(((clientX - rect.left) / rect.width) * 10), MIN, MAX);
   }
 
+  // Track whether any thumb drag is in progress (prevents panel from closing on mouseup)
+  let _anyDragging = false;
+  const _setDragging = (v) => { _anyDragging = v; if (wrap) wrap._anyDragging = v; };
+
   // Generic drag factory
   function makeDrag(onMove) {
     return function onStart(e) {
       e.preventDefault();
+      _setDragging(true);
       const startX = e.touches ? e.touches[0].clientX : e.clientX;
 
       function move(e2) {
@@ -3021,6 +3028,8 @@ function _initDualRange() {
         document.removeEventListener('mouseup',   end);
         document.removeEventListener('touchend',  end);
         joinThumb.classList.remove('dragging');
+        // Small delay so the mousedown/click that ends the drag doesn't dismiss the panel
+        setTimeout(() => { _setDragging(false); }, 50);
       }
       document.addEventListener('mousemove', move);
       document.addEventListener('touchmove', move, { passive: false });
@@ -3036,18 +3045,22 @@ function _initDualRange() {
     thumb.id = 'dualMinThumb';
     wrap.appendChild(thumb);
     thumb.addEventListener('mousedown', makeDrag((cx) => {
-      const lo = clamp(xToVal(cx), MIN, parseFloat(maxEl.value));
+      const curMax = scoreFilterMax ?? MAX;
+      const lo = clamp(xToVal(cx), MIN, curMax);
       minEl.value = lo;
       scoreFilterMin = lo;
-      scoreFilterMax = parseFloat(maxEl.value);
+      scoreFilterMax = curMax;
+      maxEl.value = curMax;
       _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
       renderRankings();
     }));
     thumb.addEventListener('touchstart', makeDrag((cx) => {
-      const lo = clamp(xToVal(cx), MIN, parseFloat(maxEl.value));
+      const curMax = scoreFilterMax ?? MAX;
+      const lo = clamp(xToVal(cx), MIN, curMax);
       minEl.value = lo;
       scoreFilterMin = lo;
-      scoreFilterMax = parseFloat(maxEl.value);
+      scoreFilterMax = curMax;
+      maxEl.value = curMax;
       _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
       renderRankings();
     }), { passive: false });
@@ -3060,18 +3073,22 @@ function _initDualRange() {
     thumb.id = 'dualMaxThumb';
     wrap.appendChild(thumb);
     thumb.addEventListener('mousedown', makeDrag((cx) => {
-      const hi = clamp(xToVal(cx), parseFloat(minEl.value), MAX);
+      const curMin = scoreFilterMin ?? MIN;
+      const hi = clamp(xToVal(cx), curMin, MAX);
       maxEl.value = hi;
-      scoreFilterMin = parseFloat(minEl.value);
+      scoreFilterMin = curMin;
       scoreFilterMax = hi;
+      minEl.value = curMin;
       _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
       renderRankings();
     }));
     thumb.addEventListener('touchstart', makeDrag((cx) => {
-      const hi = clamp(xToVal(cx), parseFloat(minEl.value), MAX);
+      const curMin = scoreFilterMin ?? MIN;
+      const hi = clamp(xToVal(cx), curMin, MAX);
       maxEl.value = hi;
-      scoreFilterMin = parseFloat(minEl.value);
+      scoreFilterMin = curMin;
       scoreFilterMax = hi;
+      minEl.value = curMin;
       _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
       renderRankings();
     }), { passive: false });
@@ -3087,6 +3104,7 @@ function _initDualRange() {
 
   function onJoinStart(e) {
     e.preventDefault();
+    _setDragging(true);
     _dragStartX   = e.touches ? e.touches[0].clientX : e.clientX;
     _dragStartVal = parseFloat(minEl.value);
     joinThumb.classList.add('dragging');
@@ -3119,6 +3137,7 @@ function _initDualRange() {
     document.removeEventListener('touchmove',  onJoinMove);
     document.removeEventListener('mouseup',   onJoinEnd);
     document.removeEventListener('touchend',  onJoinEnd);
+    setTimeout(() => { _setDragging(false); }, 50);
   }
 }
 
