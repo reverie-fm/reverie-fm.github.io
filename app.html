@@ -291,26 +291,19 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   transform:translateX(-50%);display:none;
 }
 .dual-range-input{
-  position:absolute;top:50%;width:100%;
-  -webkit-appearance:none;appearance:none;
-  height:5px;background:transparent;outline:none;
-  transform:translateY(-50%);pointer-events:none;margin:0;
+  display:none; /* hidden — values tracked in JS, drag handled by custom thumbs */
 }
-.dual-range-input::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;
+/* custom draggable thumbs for min and max */
+.dual-custom-thumb{
+  position:absolute;top:50%;
   width:18px;height:18px;border-radius:50%;
   background:var(--accent2);border:2px solid var(--bg);
   box-shadow:0 0 0 3px rgba(200,169,110,.25);
-  cursor:pointer;pointer-events:auto;
-  transition:transform .15s,box-shadow .15s;
+  transform:translate(-50%,-50%);
+  cursor:ew-resize;z-index:5;
+  transition:box-shadow .15s;
 }
-.dual-range-input::-webkit-slider-thumb:hover{transform:scale(1.18);box-shadow:0 0 0 5px rgba(200,169,110,.3)}
-.dual-range-input::-moz-range-thumb{
-  width:18px;height:18px;border-radius:50%;
-  background:var(--accent2);border:2px solid var(--bg);
-  box-shadow:0 0 0 3px rgba(200,169,110,.25);
-  cursor:pointer;pointer-events:auto;
-}
+.dual-custom-thumb:hover{box-shadow:0 0 0 5px rgba(200,169,110,.3)}
 /* custom joined thumb — sits on top of both inputs when they meet */
 .dual-joined-thumb{
   position:absolute;top:50%;
@@ -2991,78 +2984,134 @@ function _closeScorePanel(e) {
 // dragging left → min moves left. Only one label shown when joined.
 
 function _initDualRange() {
-  const minEl    = document.getElementById('scoreRangeMin');
-  const maxEl    = document.getElementById('scoreRangeMax');
-  const joinThumb= document.getElementById('dualJoinedThumb');
+  const minEl     = document.getElementById('scoreRangeMin');
+  const maxEl     = document.getElementById('scoreRangeMax');
+  const joinThumb = document.getElementById('dualJoinedThumb');
+  const wrap      = document.getElementById('dualRangeWrap');
   if (!minEl || !maxEl || minEl._drInited) return;
   minEl._drInited = true;
 
-  // Native input handlers (used when NOT joined)
-  minEl.addEventListener('input', () => {
-    let lo = parseFloat(minEl.value);
-    let hi = parseFloat(maxEl.value);
-    if (lo > hi) { lo = hi; minEl.value = lo; }
-    scoreFilterMin = lo; scoreFilterMax = hi;
-    _updateDualRangeUI(lo, hi);
-    renderRankings();
-  });
-  maxEl.addEventListener('input', () => {
-    let lo = parseFloat(minEl.value);
-    let hi = parseFloat(maxEl.value);
-    if (hi < lo) { hi = lo; maxEl.value = hi; }
-    scoreFilterMin = lo; scoreFilterMax = hi;
-    _updateDualRangeUI(lo, hi);
-    renderRankings();
-  });
+  // Disable ALL native pointer interaction — we drive everything via custom drag
+  minEl.style.pointerEvents = 'none';
+  maxEl.style.pointerEvents = 'none';
 
-  // Custom joined-thumb drag
-  let _dragStartX = null;
-  let _dragStartVal = null;
+  const STEP = 0.5, MIN = 0, MAX = 10;
+  const snap  = v => Math.round(v / STEP) * STEP;
+  const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+
+  // Convert clientX → slider value
+  function xToVal(clientX) {
+    const rect = wrap.getBoundingClientRect();
+    return clamp(snap(((clientX - rect.left) / rect.width) * 10), MIN, MAX);
+  }
+
+  // Generic drag factory
+  function makeDrag(onMove) {
+    return function onStart(e) {
+      e.preventDefault();
+      const startX = e.touches ? e.touches[0].clientX : e.clientX;
+
+      function move(e2) {
+        const cx = e2.touches ? e2.touches[0].clientX : e2.clientX;
+        onMove(cx, startX);
+      }
+      function end() {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('touchmove', move);
+        document.removeEventListener('mouseup',   end);
+        document.removeEventListener('touchend',  end);
+        joinThumb.classList.remove('dragging');
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('touchmove', move, { passive: false });
+      document.addEventListener('mouseup',   end);
+      document.addEventListener('touchend',  end);
+    };
+  }
+
+  // Min thumb drag — can't exceed max
+  function addMinThumb() {
+    const thumb = document.createElement('div');
+    thumb.className = 'dual-custom-thumb';
+    thumb.id = 'dualMinThumb';
+    wrap.appendChild(thumb);
+    thumb.addEventListener('mousedown', makeDrag((cx) => {
+      const lo = clamp(xToVal(cx), MIN, parseFloat(maxEl.value));
+      minEl.value = lo;
+      scoreFilterMin = lo;
+      scoreFilterMax = parseFloat(maxEl.value);
+      _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
+      renderRankings();
+    }));
+    thumb.addEventListener('touchstart', makeDrag((cx) => {
+      const lo = clamp(xToVal(cx), MIN, parseFloat(maxEl.value));
+      minEl.value = lo;
+      scoreFilterMin = lo;
+      scoreFilterMax = parseFloat(maxEl.value);
+      _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
+      renderRankings();
+    }), { passive: false });
+  }
+
+  // Max thumb drag — can't go below min
+  function addMaxThumb() {
+    const thumb = document.createElement('div');
+    thumb.className = 'dual-custom-thumb';
+    thumb.id = 'dualMaxThumb';
+    wrap.appendChild(thumb);
+    thumb.addEventListener('mousedown', makeDrag((cx) => {
+      const hi = clamp(xToVal(cx), parseFloat(minEl.value), MAX);
+      maxEl.value = hi;
+      scoreFilterMin = parseFloat(minEl.value);
+      scoreFilterMax = hi;
+      _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
+      renderRankings();
+    }));
+    thumb.addEventListener('touchstart', makeDrag((cx) => {
+      const hi = clamp(xToVal(cx), parseFloat(minEl.value), MAX);
+      maxEl.value = hi;
+      scoreFilterMin = parseFloat(minEl.value);
+      scoreFilterMax = hi;
+      _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
+      renderRankings();
+    }), { passive: false });
+  }
+
+  addMinThumb();
+  addMaxThumb();
+
+  // Joined thumb drag — right expands max, left expands min
+  let _dragStartX = null, _dragStartVal = null;
+  joinThumb.addEventListener('mousedown', onJoinStart);
+  joinThumb.addEventListener('touchstart', onJoinStart, { passive: false });
 
   function onJoinStart(e) {
     e.preventDefault();
     _dragStartX   = e.touches ? e.touches[0].clientX : e.clientX;
-    _dragStartVal = parseFloat(minEl.value); // lo === hi when joined
+    _dragStartVal = parseFloat(minEl.value);
     joinThumb.classList.add('dragging');
     document.addEventListener('mousemove', onJoinMove);
     document.addEventListener('touchmove',  onJoinMove, { passive: false });
     document.addEventListener('mouseup',   onJoinEnd);
     document.addEventListener('touchend',  onJoinEnd);
   }
-
   function onJoinMove(e) {
     if (_dragStartX === null) return;
-    const wrap   = document.getElementById('dualRangeWrap');
-    const rect   = wrap.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const dx     = clientX - _dragStartX;           // px delta
-    const range  = rect.width;                       // track width in px
-    const valDelta = (dx / range) * 10;              // map to 0–10 scale
-    const STEP   = 0.5;
-
-    // Snap to nearest 0.5
-    const snap = v => Math.round(v / STEP) * STEP;
-    const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
-
+    const rect     = wrap.getBoundingClientRect();
+    const cx       = e.touches ? e.touches[0].clientX : e.clientX;
+    const valDelta = ((cx - _dragStartX) / rect.width) * 10;
     if (valDelta > 0) {
-      // Dragging right → move max
-      const newHi = clamp(snap(_dragStartVal + valDelta), _dragStartVal, 10);
-      scoreFilterMax = newHi;
-      scoreFilterMin = _dragStartVal;
-      maxEl.value = newHi;
-      minEl.value = _dragStartVal;
+      const newHi = clamp(snap(_dragStartVal + valDelta), _dragStartVal, MAX);
+      scoreFilterMin = _dragStartVal; scoreFilterMax = newHi;
+      minEl.value = _dragStartVal;    maxEl.value = newHi;
     } else {
-      // Dragging left → move min
-      const newLo = clamp(snap(_dragStartVal + valDelta), 0, _dragStartVal);
-      scoreFilterMin = newLo;
-      scoreFilterMax = _dragStartVal;
-      minEl.value = newLo;
-      maxEl.value = _dragStartVal;
+      const newLo = clamp(snap(_dragStartVal + valDelta), MIN, _dragStartVal);
+      scoreFilterMin = newLo; scoreFilterMax = _dragStartVal;
+      minEl.value = newLo;   maxEl.value = _dragStartVal;
     }
     _updateDualRangeUI(scoreFilterMin, scoreFilterMax);
     renderRankings();
   }
-
   function onJoinEnd() {
     _dragStartX = null;
     joinThumb.classList.remove('dragging');
@@ -3071,9 +3120,6 @@ function _initDualRange() {
     document.removeEventListener('mouseup',   onJoinEnd);
     document.removeEventListener('touchend',  onJoinEnd);
   }
-
-  joinThumb.addEventListener('mousedown',  onJoinStart);
-  joinThumb.addEventListener('touchstart', onJoinStart, { passive: false });
 }
 
 function _updateDualRangeUI(lo, hi) {
@@ -3083,8 +3129,8 @@ function _updateDualRangeUI(lo, hi) {
   const lblMax      = document.getElementById('thumbLabelMax');
   const lblJoined   = document.getElementById('thumbLabelJoined');
   const joinThumb   = document.getElementById('dualJoinedThumb');
-  const minEl       = document.getElementById('scoreRangeMin');
-  const maxEl       = document.getElementById('scoreRangeMax');
+  const minThumb    = document.getElementById('dualMinThumb');
+  const maxThumb    = document.getElementById('dualMaxThumb');
   const wrap        = document.getElementById('dualRangeWrap');
   const isDefault   = lo === 0 && hi === 10;
   const joined      = lo === hi;
@@ -3097,8 +3143,8 @@ function _updateDualRangeUI(lo, hi) {
   if (fill) { fill.style.left = leftPct + '%'; fill.style.width = (rightPct - leftPct) + '%'; }
 
   if (joined) {
-    if (minEl) minEl.style.pointerEvents = 'none';
-    if (maxEl) maxEl.style.pointerEvents = 'none';
+    if (minThumb)  minThumb.style.display  = 'none';
+    if (maxThumb)  maxThumb.style.display  = 'none';
     if (joinThumb) { joinThumb.style.display = 'block'; joinThumb.style.left = leftPct + '%'; }
     if (lblMin)    lblMin.style.display    = 'none';
     if (lblMax)    lblMax.style.display    = 'none';
@@ -3108,41 +3154,27 @@ function _updateDualRangeUI(lo, hi) {
       lblJoined.textContent   = fmt(lo);
     }
   } else {
-    if (minEl) minEl.style.pointerEvents = 'auto';
-    if (maxEl) maxEl.style.pointerEvents = 'auto';
     if (joinThumb) joinThumb.style.display = 'none';
     if (lblJoined) lblJoined.style.display = 'none';
+    if (minThumb)  { minThumb.style.display = 'block'; minThumb.style.left = leftPct + '%'; }
+    if (maxThumb)  { maxThumb.style.display = 'block'; maxThumb.style.left = rightPct + '%'; }
 
-    // Nudge labels apart when close — estimate label width in % of track
-    const trackW   = wrap ? wrap.getBoundingClientRect().width : 220;
-    // approx label width for a 2-char string ~28px, 3-char ~36px
-    const lwMin    = (fmt(lo).length <= 1 ? 24 : fmt(lo).length <= 3 ? 30 : 36) / trackW * 100;
-    const lwMax    = (fmt(hi).length <= 1 ? 24 : fmt(hi).length <= 3 ? 30 : 36) / trackW * 100;
-    const minHalf  = lwMin / 2;
-    const maxHalf  = lwMax / 2;
-    // gap needed so label edges don't touch (add 3px buffer)
-    const bufPct   = 3 / trackW * 100;
-    const needed   = minHalf + maxHalf + bufPct;
-    const diff     = rightPct - leftPct;
-
-    let loPos = leftPct;
-    let hiPos = rightPct;
-
-    if (diff < needed) {
-      // Nudge each label outward by half the overlap
-      const overlap = needed - diff;
-      loPos = leftPct  - overlap / 2;
-      hiPos = rightPct + overlap / 2;
-    }
+    // Nudge labels apart when they'd overlap
+    const trackW  = wrap ? wrap.getBoundingClientRect().width : 220;
+    const lwMin   = (fmt(lo).length  <= 1 ? 24 : fmt(lo).length  <= 3 ? 30 : 36) / trackW * 100;
+    const lwMax   = (fmt(hi).length  <= 1 ? 24 : fmt(hi).length  <= 3 ? 30 : 36) / trackW * 100;
+    const needed  = (lwMin / 2) + (lwMax / 2) + (4 / trackW * 100);
+    const diff    = rightPct - leftPct;
+    const overlap = Math.max(0, needed - diff);
 
     if (lblMin) {
       lblMin.style.display  = 'block';
-      lblMin.style.left     = clamp(loPos, 2, 94) + '%';
+      lblMin.style.left     = clamp(leftPct  - overlap / 2, 2, 94) + '%';
       lblMin.textContent    = fmt(lo);
     }
     if (lblMax) {
       lblMax.style.display  = 'block';
-      lblMax.style.left     = clamp(hiPos, 6, 98) + '%';
+      lblMax.style.left     = clamp(rightPct + overlap / 2, 6, 98) + '%';
       lblMax.textContent    = fmt(hi);
     }
   }
