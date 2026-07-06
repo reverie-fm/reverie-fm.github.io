@@ -24,9 +24,9 @@
   --red:#e05c5c;
   --green:#5dba7a;
   --blue:#7a7a72;
-  --tier-s:#ffd23f;
-  --tier-a:#4ecb7d;
-  --tier-b:#4fc3e0;
+  --tier-s:#d966e0;
+  --tier-a:#4fc3e0;
+  --tier-b:#4ecb7d;
   --tier-c:#e8c94a;
   --tier-d:#f0954a;
   --tier-e:#ea6b45;
@@ -887,8 +887,8 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   animation:perfectPulse 3.8s ease-in-out infinite;
 }
 @keyframes perfectPulse{
-  0%,100%{filter:drop-shadow(0 0 2px rgba(255,210,63,.45)) drop-shadow(0 0 5px rgba(255,210,63,.18))}
-  50%{filter:drop-shadow(0 0 5px rgba(255,210,63,.95)) drop-shadow(0 0 12px rgba(255,210,63,.5)) drop-shadow(0 0 22px rgba(255,210,63,.2))}
+  0%,100%{filter:drop-shadow(0 0 2px rgba(217,102,224,.45)) drop-shadow(0 0 5px rgba(217,102,224,.18))}
+  50%{filter:drop-shadow(0 0 5px rgba(217,102,224,.95)) drop-shadow(0 0 12px rgba(217,102,224,.5)) drop-shadow(0 0 22px rgba(217,102,224,.2))}
 }
 
 /* ── Score ring draw-on ── */
@@ -1488,9 +1488,9 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
             <div class="rating-section-label">Your rating</div>
             <input type="hidden" id="ratingSlider" value="5.5">
             <div class="tier-picker" id="tierPicker-main">
-              <button type="button" class="tier-chip" data-tier="S" style="--tc:#ffd23f" onclick="pickTierMain('S')">S</button>
-              <button type="button" class="tier-chip" data-tier="A" style="--tc:#4ecb7d" onclick="pickTierMain('A')">A</button>
-              <button type="button" class="tier-chip" data-tier="B" style="--tc:#4fc3e0" onclick="pickTierMain('B')">B</button>
+              <button type="button" class="tier-chip" data-tier="S" style="--tc:#d966e0" onclick="pickTierMain('S')">S</button>
+              <button type="button" class="tier-chip" data-tier="A" style="--tc:#4fc3e0" onclick="pickTierMain('A')">A</button>
+              <button type="button" class="tier-chip" data-tier="B" style="--tc:#4ecb7d" onclick="pickTierMain('B')">B</button>
               <button type="button" class="tier-chip" data-tier="C" style="--tc:#e8c94a" onclick="pickTierMain('C')">C</button>
               <button type="button" class="tier-chip" data-tier="D" style="--tc:#f0954a" onclick="pickTierMain('D')">D</button>
               <button type="button" class="tier-chip" data-tier="E" style="--tc:#ea6b45" onclick="pickTierMain('E')">E</button>
@@ -1546,7 +1546,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
             <div class="dual-joined-thumb" id="dualJoinedThumb"></div>
           </div>
           <div class="dual-range-tiers">
-            <span style="color:#e2493f">F</span><span style="color:#ea6b45">E</span><span style="color:#f0954a">D</span><span style="color:#e8c94a">C</span><span style="color:#4fc3e0">B</span><span style="color:#4ecb7d">A</span><span style="color:#ffd23f">S</span>
+            <span style="color:#e2493f">F</span><span style="color:#ea6b45">E</span><span style="color:#f0954a">D</span><span style="color:#e8c94a">C</span><span style="color:#4ecb7d">B</span><span style="color:#4fc3e0">A</span><span style="color:#d966e0">S</span>
           </div>
           <div class="filter-panel-footer" style="margin-top:1.8rem">
             <span class="filter-count-badge" id="scoreFilterCount"></span>
@@ -2200,7 +2200,7 @@ function renderUserProfile(el, username) {
       <div class="artist-name">${esc(a.name)}</div>
       <div class="artist-bar-track"><div class="artist-bar-fill" style="width:${Math.round((a.count/maxAC)*100)}%"></div></div>
       <div class="artist-count">${a.count} track${a.count!==1?'s':''}</div>
-      <div class="artist-avg">${a.avg.toFixed(1)}</div>
+      <div class="artist-avg" style="color:${scoreToTier(a.avg).color}">${scoreToTier(a.avg).key}</div>
     </div>`).join('');
 
   el.innerHTML = `
@@ -2215,7 +2215,7 @@ function renderUserProfile(el, username) {
       </div>
       <div class="profile-stat-row">
         <div class="profile-stat"><div class="profile-stat-num">${s.count}</div><div class="profile-stat-label">Rated</div></div>
-        <div class="profile-stat"><div class="profile-stat-num">${s.count ? avg.toFixed(1) : '—'}</div><div class="profile-stat-label">Avg Score</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" style="color:${s.count ? scoreToTier(avg).color : ''}">${s.count ? scoreToTier(avg).key : '—'}</div><div class="profile-stat-label">Avg Grade</div></div>
         <div class="profile-stat"><div class="profile-stat-num">${s.count ? median.toFixed(1) : '—'}</div><div class="profile-stat-label">Median</div></div>
         <div class="profile-stat"><div class="profile-stat-num" style="color:var(--tier-a)">${bangers}</div><div class="profile-stat-label">A+ Tracks</div></div>
         <div class="profile-stat"><div class="profile-stat-num" style="color:var(--tier-s)">${tens}</div><div class="profile-stat-label">S Tier</div></div>
@@ -2268,9 +2268,9 @@ function animateCount(el, target, duration, isFloat) {
 // Each tier anchors to a numeric value (kept for sorting, averaging,
 // and backward-compatibility with any older 0–10 decimal ratings).
 const TIERS = [
-  { key:'S', value:10,  color:'#ffd23f', label:'Transcendent', desc:'A perfect one. Life-changing, no notes.' },
-  { key:'A', value:8.5, color:'#4ecb7d', label:'Excellent',     desc:'Genuinely great. Barely any skips.' },
-  { key:'B', value:7,   color:'#4fc3e0', label:'Good',          desc:'Solid and enjoyable, keeps pulling you back.' },
+  { key:'S', value:10,  color:'#d966e0', label:'Transcendent', desc:'A perfect one. Life-changing, no notes.' },
+  { key:'A', value:8.5, color:'#4fc3e0', label:'Excellent',     desc:'Genuinely great. Barely any skips.' },
+  { key:'B', value:7,   color:'#4ecb7d', label:'Good',          desc:'Solid and enjoyable, keeps pulling you back.' },
   { key:'C', value:5.5, color:'#e8c94a', label:'Decent',        desc:'Fine — a few good moments, nothing special.' },
   { key:'D', value:4,   color:'#f0954a', label:'Mediocre',      desc:'Mostly forgettable, wouldn\u2019t replay.' },
   { key:'E', value:2.5, color:'#ea6b45', label:'Bad',           desc:'Rough listen, had to push through it.' },
@@ -3269,20 +3269,21 @@ function renderRankings() {
 
   const ratedCount = ratings.length;
   const avgVal = parseFloat(avg);
+  const avgTier = scoreToTier(avgVal);
   const bangersCount = ratings.filter(r=>r.score>=8.5).length; // A tier or better
   const perfectCount = ratings.filter(r=>r.score===10).length; // S tier
 
   statsBar.innerHTML = `
     <div class="stat"><div class="stat-num" id="sbn-rated">0</div><div class="stat-label">Rated</div></div>
-    <div class="stat"><div class="stat-num" id="sbn-avg">0</div><div class="stat-label">Avg Score</div></div>
+    <div class="stat"><div class="stat-num" id="sbn-avg" style="color:${avgTier.color}">—</div><div class="stat-label">Avg Grade</div></div>
     <div class="stat"><div class="stat-num" id="sbn-bangers" style="color:var(--tier-a)">0</div><div class="stat-label">A+ Tracks</div></div>
     <div class="stat"><div class="stat-num" id="sbn-perfect" style="color:var(--tier-s)">0</div><div class="stat-label">S Tier</div></div>
   `;
 
-  // staggered count-ups
+  // staggered count-ups (avg is a letter grade, so it's set directly rather than counted up)
   const dur = 1400;
   setTimeout(() => animateCount(document.getElementById('sbn-rated'),   ratedCount,   dur,       false), 0);
-  setTimeout(() => animateCount(document.getElementById('sbn-avg'),     avgVal,       dur,       1),     120);
+  setTimeout(() => { const e = document.getElementById('sbn-avg'); if (e) e.textContent = avgTier.key; }, 120);
   setTimeout(() => animateCount(document.getElementById('sbn-bangers'), bangersCount, dur,       false), 240);
   setTimeout(() => animateCount(document.getElementById('sbn-perfect'), perfectCount, dur,       false), 360);
 
@@ -4043,13 +4044,13 @@ function renderStats() {
   const maxArtistCount = Math.max(...topArtists.map(a => a.count), 1);
 
   const artistHTML = topArtists.map(a => {
-    const roundedAvg = (Math.round(a.avg * 2) / 2).toFixed(1);
+    const artistTier = scoreToTier(a.avg);
     return `
     <div class="artist-row">
       <div class="artist-name">${esc(a.name)}</div>
       <div class="artist-bar-track"><div class="artist-bar-fill" style="width:${Math.round((a.count/maxArtistCount)*100)}%"></div></div>
       <div class="artist-count">${a.count} track${a.count!==1?'s':''}</div>
-      <div class="artist-avg">${roundedAvg}</div>
+      <div class="artist-avg" style="color:${artistTier.color}">${artistTier.key}</div>
     </div>`;
   }).join('');
 
@@ -4079,9 +4080,10 @@ function renderStats() {
   const totalUsers = _profilesCache ? Object.keys(_profilesCache).length : 1;
   // Top artist avg (rounded to .5) for the current user
   const topArtistForStrip = topArtists.length ? topArtists[0] : null;
-  const topArtistAvg = topArtistForStrip ? (Math.round(topArtistForStrip.avg * 2) / 2).toFixed(1) : '—';
+  const topArtistAvgTier = topArtistForStrip ? scoreToTier(topArtistForStrip.avg) : null;
+  const topArtistAvg = topArtistAvgTier ? topArtistAvgTier.key : '—';
   const topArtistName = topArtistForStrip ? topArtistForStrip.name : '—';
-  const highestTier = scoreToTier(highest), lowestTier = scoreToTier(lowest);
+  const highestTier = scoreToTier(highest), lowestTier = scoreToTier(lowest), avgTier = scoreToTier(avg);
 
   el.innerHTML = `
     <div class="global-stats-strip">
@@ -4096,13 +4098,13 @@ function renderStats() {
       </div>
       <div class="global-stat-divider"></div>
       <div class="global-stat-col">
-        <div class="global-stat-num" id="sc-topartist" title="${esc(topArtistName)}">${topArtistAvg}</div>
+        <div class="global-stat-num" id="sc-topartist" style="color:${topArtistAvgTier ? topArtistAvgTier.color : ''}" title="${esc(topArtistName)}">${topArtistAvg}</div>
         <div class="global-stat-label" title="${esc(topArtistName)}">Top Artist Avg${topArtistName !== '—' ? ' · ' + esc(topArtistName) : ''}</div>
       </div>
     </div>
 
     <div class="stat-cards">
-      <div class="stat-card"><div class="stat-card-num" id="sc-avg">—</div><div class="stat-card-label">Average</div></div>
+      <div class="stat-card"><div class="stat-card-num" style="color:${avgTier.color}">${avgTier.key}</div><div class="stat-card-label">Average</div></div>
       <div class="stat-card"><div class="stat-card-num" id="sc-med">—</div><div class="stat-card-label">Median</div></div>
       <div class="stat-card"><div class="stat-card-num" style="color:${highestTier.color}">${highestTier.key}</div><div class="stat-card-label">Highest</div></div>
       <div class="stat-card"><div class="stat-card-num" style="color:${lowestTier.color}">${lowestTier.key}</div><div class="stat-card-label">Lowest</div></div>
@@ -4129,11 +4131,10 @@ function renderStats() {
     </div>
   `;
 
-  // Staggered count-up for numeric stat cards (Highest/Lowest are tier letters, set directly above)
+  // Staggered count-up for numeric stat cards (Average/Highest/Lowest are tier letters, set directly above)
   const dur = 1500;
-  setTimeout(() => animateCount(document.getElementById('sc-avg'), avg,                    dur, 2), 0);
-  setTimeout(() => animateCount(document.getElementById('sc-med'), median,                 dur, 1), 100);
-  setTimeout(() => animateCount(document.getElementById('sc-sd'),  stddev,                 dur, 2), 200);
+  setTimeout(() => animateCount(document.getElementById('sc-med'), median,                 dur, 1), 0);
+  setTimeout(() => animateCount(document.getElementById('sc-sd'),  stddev,                 dur, 2), 100);
 
   // Staggered bar grow-in
   requestAnimationFrame(() => {
@@ -4463,9 +4464,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     <div class="modal-rating-label">Update your rating</div>
     <input type="hidden" id="modalRatingSlider" value="5.5">
     <div class="tier-picker" id="tierPicker-modal">
-      <button type="button" class="tier-chip" data-tier="S" style="--tc:#ffd23f" onclick="pickTierModal('S')">S</button>
-      <button type="button" class="tier-chip" data-tier="A" style="--tc:#4ecb7d" onclick="pickTierModal('A')">A</button>
-      <button type="button" class="tier-chip" data-tier="B" style="--tc:#4fc3e0" onclick="pickTierModal('B')">B</button>
+      <button type="button" class="tier-chip" data-tier="S" style="--tc:#d966e0" onclick="pickTierModal('S')">S</button>
+      <button type="button" class="tier-chip" data-tier="A" style="--tc:#4fc3e0" onclick="pickTierModal('A')">A</button>
+      <button type="button" class="tier-chip" data-tier="B" style="--tc:#4ecb7d" onclick="pickTierModal('B')">B</button>
       <button type="button" class="tier-chip" data-tier="C" style="--tc:#e8c94a" onclick="pickTierModal('C')">C</button>
       <button type="button" class="tier-chip" data-tier="D" style="--tc:#f0954a" onclick="pickTierModal('D')">D</button>
       <button type="button" class="tier-chip" data-tier="E" style="--tc:#ea6b45" onclick="pickTierModal('E')">E</button>
