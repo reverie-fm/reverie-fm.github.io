@@ -6,7 +6,7 @@
 <title>Reverie</title>
 <link rel="icon" type="image/png" href="ReverieLogo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -24,6 +24,13 @@
   --red:#e05c5c;
   --green:#5dba7a;
   --blue:#7a7a72;
+  --tier-s:#ffd23f;
+  --tier-a:#4ecb7d;
+  --tier-b:#4fc3e0;
+  --tier-c:#e8c94a;
+  --tier-d:#f0954a;
+  --tier-e:#ea6b45;
+  --tier-f:#e2493f;
 }
 html{min-height:100vh;overflow-y:scroll;overflow-x:hidden;scrollbar-gutter:stable}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;min-height:100vh}
@@ -180,36 +187,31 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .rating-section-label{font-family:'DM Mono',monospace;font-size:.65rem;text-transform:uppercase;
   letter-spacing:.09em;color:var(--muted);margin-bottom:.5rem}
 
-/* ── Slider rating ── */
-.slider-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem}
-.slider-val{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--accent2);
-  min-width:2.8rem;text-align:center;line-height:1;flex-shrink:0}
-.slider-val span{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);display:block;margin-top:.1rem}
-.slider-wrap{flex:1;display:flex;flex-direction:column;gap:.35rem}
-
-/* Custom range slider */
-.rating-slider{
-  -webkit-appearance:none;appearance:none;
-  width:100%;height:6px;border-radius:3px;outline:none;cursor:pointer;
-  background:linear-gradient(to right, var(--accent) 0%, var(--accent) var(--pct,0%), var(--surface3) var(--pct,0%), var(--surface3) 100%);
-  transition:background .05s;
+/* ── Tier rating picker (S–F) ── */
+.tier-picker{display:flex;gap:.4rem;margin-bottom:.7rem;flex-wrap:wrap}
+.tier-chip{
+  --tc:var(--accent);
+  position:relative;flex:1;min-width:2.6rem;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:1.15rem;
+  padding:.55rem .3rem;text-align:center;color:var(--tc);
+  background:color-mix(in srgb, var(--tc) 12%, var(--surface2));
+  border:2px solid color-mix(in srgb, var(--tc) 45%, transparent);
+  border-radius:11px;cursor:pointer;line-height:1;
+  transform:rotate(0deg) scale(1);
+  transition:transform .18s cubic-bezier(.34,1.6,.64,1), box-shadow .18s, background .18s, border-color .18s;
 }
-.rating-slider::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;
-  width:20px;height:20px;border-radius:50%;
-  background:var(--accent2);border:2px solid var(--bg);
-  box-shadow:0 0 0 3px rgba(200,169,110,.25);
-  cursor:pointer;transition:transform .18s cubic-bezier(.34,1.8,.64,1), box-shadow .15s;
+.tier-chip:nth-child(odd){transform:rotate(-1.5deg)}
+.tier-chip:nth-child(even){transform:rotate(1.5deg)}
+.tier-chip:hover{transform:scale(1.08) rotate(0deg);box-shadow:0 4px 14px color-mix(in srgb, var(--tc) 35%, transparent)}
+.tier-chip.active{
+  background:var(--tc);color:#0a0a0a;border-color:var(--tc);
+  transform:scale(1.14) rotate(0deg);
+  box-shadow:0 4px 18px color-mix(in srgb, var(--tc) 55%, transparent), 0 0 0 3px color-mix(in srgb, var(--tc) 25%, transparent);
+  animation:tierStamp .3s cubic-bezier(.34,1.8,.64,1);
 }
-.rating-slider::-webkit-slider-thumb:hover{transform:scale(1.15);box-shadow:0 0 0 5px rgba(200,169,110,.3)}
-.rating-slider::-moz-range-thumb{
-  width:20px;height:20px;border-radius:50%;
-  background:var(--accent2);border:2px solid var(--bg);
-  box-shadow:0 0 0 3px rgba(200,169,110,.25);
-  cursor:pointer;
-}
-.slider-ticks{display:flex;justify-content:space-between;padding:0 2px}
-.slider-tick{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);opacity:.5;user-select:none}
+@keyframes tierStamp{0%{transform:scale(.7) rotate(-8deg)}60%{transform:scale(1.22) rotate(4deg)}100%{transform:scale(1.14) rotate(0deg)}}
+.tier-chip-sm{font-size:.82rem;padding:.3rem .2rem;border-radius:8px;min-width:1.8rem;border-width:1.5px}
+.tier-picker-sm{gap:.25rem;flex:1;flex-wrap:nowrap}
 
 .btn-rate-save{padding:.5rem 1.2rem;background:var(--surface3);border:1px solid var(--border2);
   border-radius:9px;color:var(--accent2);font-weight:500;font-size:.82rem;cursor:pointer;
@@ -217,7 +219,8 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .btn-rate-save:hover{background:var(--accent);color:#1a1408;border-color:var(--accent)}
 .btn-rate-save:disabled{opacity:.3;cursor:not-allowed}
 .rating-guide{margin:.6rem 0 .75rem;min-height:1.4rem}
-.rating-guide .guide-label{font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.01em}
+.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1rem;font-weight:600;letter-spacing:.01em}
+.rating-guide .guide-desc{display:block;font-family:'DM Sans',sans-serif;font-size:.78rem;color:var(--muted);margin-top:.15rem}
 
 /* ── Stats ── */
 .stats-bar{display:flex;gap:1rem;margin-bottom:2rem;padding:1.1rem 1.5rem;
@@ -304,6 +307,8 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   transition:box-shadow .15s;
 }
 .dual-custom-thumb:hover{box-shadow:0 0 0 5px rgba(200,169,110,.3)}
+.dual-range-tiers{display:flex;justify-content:space-between;padding:0 1px;margin-top:.35rem;
+  font-family:'Fredoka',sans-serif;font-weight:600;font-size:.7rem;opacity:.75}
 /* custom joined thumb — sits on top of both inputs when they meet */
 .dual-joined-thumb{
   position:absolute;top:50%;
@@ -371,7 +376,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .score-ring-track{fill:none;stroke:var(--surface3);stroke-width:3.5}
 .score-ring-fill{fill:none;stroke-width:3.5;stroke-linecap:round;transition:stroke-dashoffset .4s ease, stroke .4s ease}
 .score-ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.score-ring-num{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--accent2);line-height:1}
+.score-ring-num{font-family:'Fredoka',sans-serif;font-size:1.25rem;font-weight:700;color:var(--accent2);line-height:1}
 .score-ring-denom{font-family:'DM Mono',monospace;font-size:.48rem;color:var(--muted);margin-top:.05rem}
 
 .rank-actions{display:flex;flex-direction:column;gap:5px;padding:.75rem .8rem;flex-shrink:0}
@@ -459,8 +464,8 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .search-result-info{flex:1;min-width:0}
 .search-result-title{font-size:.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .search-result-sub{font-size:.72rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.search-result-badge{font-family:'DM Mono',monospace;font-size:.62rem;padding:.2rem .5rem;
-  border-radius:4px;background:var(--surface3);color:var(--accent2);flex-shrink:0;white-space:nowrap}
+.search-result-badge{font-family:'Fredoka',sans-serif;font-size:.85rem;font-weight:600;padding:.15rem .55rem;
+  border-radius:7px;background:var(--surface3);color:var(--accent2);flex-shrink:0;white-space:nowrap}
 
 /* ── Albums vinyl grid ── */
 .albums-empty{text-align:center;padding:4rem 2rem;color:var(--muted);font-size:.88rem}
@@ -636,7 +641,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .vinyl-label-name{font-size:.8rem;font-weight:500;white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis;color:var(--text);margin-bottom:.12rem}
 .vinyl-label-artist{font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.vinyl-label-score{font-family:'Playfair Display',serif;font-size:.95rem;margin-top:.25rem}
+.vinyl-label-score{font-family:'Fredoka',sans-serif;font-size:1.05rem;font-weight:600;margin-top:.25rem}
 
 /* ── Per-item expand panel ── */
 /* Each vinyl-cell spans exactly 1 column; the panel is a separate full-row element */
@@ -677,7 +682,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   box-shadow:0 2px 10px rgba(0,0,0,.7);
   z-index:2;
 }
-.vinyl-expand-score-num{font-family:'Playfair Display',serif;font-size:1.5rem;line-height:1;font-weight:700;letter-spacing:-0.02em}
+.vinyl-expand-score-num{font-family:'Fredoka',sans-serif;font-size:1.7rem;line-height:1;font-weight:700;letter-spacing:-0.01em}
 .vinyl-expand-score-sub{font-family:'DM Mono',monospace;font-size:.5rem;color:var(--accent);opacity:.7;margin-top:.05rem}
 .vinyl-expand-info{padding:.75rem 1rem .4rem;border-bottom:1px solid var(--border);min-width:0}
 .vinyl-expand-title{font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:.1rem}
@@ -718,15 +723,13 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .album-track-num{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);
   width:1.4rem;text-align:right;flex-shrink:0}
 .album-track-name{flex:1;font-size:.8rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.album-track-score{font-family:'Playfair Display',serif;font-size:.95rem;min-width:2.5rem;text-align:right;flex-shrink:0}
+.album-track-score{font-family:'Fredoka',sans-serif;font-size:1.05rem;font-weight:600;min-width:2.5rem;text-align:right;flex-shrink:0}
 .album-track-edit{background:none;border:none;color:var(--muted);cursor:pointer;
   font-size:.75rem;padding:.1rem .3rem;opacity:0;transition:opacity .15s}
 .album-track-row:hover .album-track-edit{opacity:1}
-.album-track-inline-slider{display:none;padding:.3rem .35rem .5rem 2.1rem;align-items:center;gap:.6rem;flex-wrap:wrap}
+.album-track-inline-slider{display:none;padding:.35rem .35rem .55rem 2.1rem;align-items:center;gap:.5rem;flex-wrap:wrap}
 .album-track-inline-slider.open{display:flex}
-.album-track-inline-slider .rating-slider{flex:1}
-.album-track-inline-val{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--accent2);min-width:2rem;text-align:center}
-.album-track-inline-guide{font-size:.68rem;color:var(--muted);min-width:5rem;font-family:'DM Sans',sans-serif;transition:color .15s}
+.album-track-inline-guide{font-size:.68rem;color:var(--muted);min-width:4rem;font-family:'Fredoka',sans-serif;font-weight:600;transition:color .15s}
 .atsl-save-btn{background:var(--accent);border:none;color:#1a1408;border-radius:6px;padding:.25rem .6rem;font-size:.72rem;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
 .album-track-notes-row{display:none;padding:.2rem .35rem .45rem 1.1rem}
 .album-track-notes-row.open{display:block}
@@ -792,18 +795,18 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   border:1px solid rgba(255,255,255,.08);
   box-shadow:0 3px 14px rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.05) inset;
   backdrop-filter:blur(6px)}
-.dist-chart-inner{display:flex;align-items:flex-end;gap:4px;height:100px;padding-bottom:0}
+.dist-chart-inner{display:flex;align-items:flex-end;gap:10px;height:110px;padding-bottom:0}
 .dist-col{display:flex;flex-direction:column;align-items:center;flex:1;height:100%}
 .dist-col-bar-wrap{flex:1;display:flex;align-items:flex-end;width:100%}
-.dist-col-bar{width:100%;border-radius:3px 3px 0 0;background:var(--surface3);
+.dist-col-bar{width:100%;border-radius:8px 8px 3px 3px;background:var(--surface3);
   transition:height .5s cubic-bezier(.34,1.56,.64,1);min-height:0;cursor:default}
 .dist-col-bar.score-low{background:#e05c5c}
 .dist-col-bar.score-mid{background:#e8c95a}
 .dist-col-bar.score-high{background:#5dba7a}
 .dist-col-bar.score-max{background:#5dba7a;box-shadow:0 0 8px rgba(93,186,122,.3)}
-.dist-col-label{font-family:'DM Mono',monospace;font-size:.52rem;color:var(--muted);
-  margin-top:4px;line-height:1;opacity:.7;text-align:center}
-.dist-col-count{font-family:'DM Mono',monospace;font-size:.52rem;color:var(--muted);
+.dist-col-label{font-family:'Fredoka',sans-serif;font-weight:600;font-size:.95rem;
+  margin-top:5px;line-height:1;opacity:.95;text-align:center}
+.dist-col-count{font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);
   margin-bottom:2px;line-height:1;opacity:0;transition:opacity .15s;height:.7rem}
 .dist-col:hover .dist-col-count{opacity:1}
 .dist-col:hover .dist-col-bar{filter:brightness(1.25)}
@@ -842,7 +845,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .activity-info{flex:1;min-width:0}
 .activity-title{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .activity-sub{font-size:.7rem;color:var(--muted);margin-top:.1rem}
-.activity-score{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--accent2);flex-shrink:0}
+.activity-score{font-family:'Fredoka',sans-serif;font-size:1.3rem;font-weight:600;color:var(--accent2);flex-shrink:0}
 .activity-date{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--muted);flex-shrink:0}
 
 .stats-empty{text-align:center;padding:4rem 2rem;color:var(--muted)}
@@ -884,8 +887,8 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   animation:perfectPulse 3.8s ease-in-out infinite;
 }
 @keyframes perfectPulse{
-  0%,100%{filter:drop-shadow(0 0 2px rgba(93,186,122,.4)) drop-shadow(0 0 5px rgba(93,186,122,.15))}
-  50%{filter:drop-shadow(0 0 5px rgba(93,186,122,.9)) drop-shadow(0 0 12px rgba(93,186,122,.45)) drop-shadow(0 0 22px rgba(93,186,122,.18))}
+  0%,100%{filter:drop-shadow(0 0 2px rgba(255,210,63,.45)) drop-shadow(0 0 5px rgba(255,210,63,.18))}
+  50%{filter:drop-shadow(0 0 5px rgba(255,210,63,.95)) drop-shadow(0 0 12px rgba(255,210,63,.5)) drop-shadow(0 0 22px rgba(255,210,63,.2))}
 }
 
 /* ── Score ring draw-on ── */
@@ -1098,7 +1101,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .feed-card-time{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--muted);opacity:.5;
   margin-top:.25rem}
-.feed-card-score{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;
+.feed-card-score{font-family:'Fredoka',sans-serif;font-size:1.4rem;font-weight:700;
   flex-shrink:0;min-width:2.2rem;text-align:right}
 .feed-load-more{width:100%;padding:.6rem;background:none;border:1px solid var(--border);
   border-radius:9px;color:var(--muted);font-size:.78rem;font-family:'DM Sans',sans-serif;
@@ -1483,20 +1486,15 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
           <a class="fetched-link" id="fetchedLink" href="#" target="_blank">Open in Spotify ↗</a>
           <div class="rating-section">
             <div class="rating-section-label">Your rating</div>
-            <div class="slider-row">
-              <div class="slider-val" id="sliderVal">—<span>/10</span></div>
-              <div class="slider-wrap">
-                <input class="rating-slider" id="ratingSlider" type="range" min="0" max="10" step="0.5" value="5"
-                  oninput="onSliderInput(this, 'sliderVal', 'rateSaveBtn')">
-                <div class="slider-ticks">
-                  <span class="slider-tick">0</span><span class="slider-tick">1</span>
-                  <span class="slider-tick">2</span><span class="slider-tick">3</span>
-                  <span class="slider-tick">4</span><span class="slider-tick">5</span>
-                  <span class="slider-tick">6</span><span class="slider-tick">7</span>
-                  <span class="slider-tick">8</span><span class="slider-tick">9</span>
-                  <span class="slider-tick">10</span>
-                </div>
-              </div>
+            <input type="hidden" id="ratingSlider" value="5.5">
+            <div class="tier-picker" id="tierPicker-main">
+              <button type="button" class="tier-chip" data-tier="S" style="--tc:#ffd23f" onclick="pickTierMain('S')">S</button>
+              <button type="button" class="tier-chip" data-tier="A" style="--tc:#4ecb7d" onclick="pickTierMain('A')">A</button>
+              <button type="button" class="tier-chip" data-tier="B" style="--tc:#4fc3e0" onclick="pickTierMain('B')">B</button>
+              <button type="button" class="tier-chip" data-tier="C" style="--tc:#e8c94a" onclick="pickTierMain('C')">C</button>
+              <button type="button" class="tier-chip" data-tier="D" style="--tc:#f0954a" onclick="pickTierMain('D')">D</button>
+              <button type="button" class="tier-chip" data-tier="E" style="--tc:#ea6b45" onclick="pickTierMain('E')">E</button>
+              <button type="button" class="tier-chip" data-tier="F" style="--tc:#e2493f" onclick="pickTierMain('F')">F</button>
             </div>
             <div class="rating-guide" id="ratingGuide"></div>
             <button class="btn-rate-save" id="rateSaveBtn" onclick="saveFetchedRating()" disabled>Save Rating</button>
@@ -1532,20 +1530,23 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
       <div class="filter-dropdown-wrap" id="scoreFilterWrap" style="display:none">
         <button class="filter-dropdown-btn" id="scoreFilterBtn" onclick="toggleScoreFilterPanel()">
           <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-          Score
+          Tier
           <div class="filter-pip"></div>
         </button>
         <div class="filter-dropdown-panel" id="scoreFilterPanel">
-          <div class="filter-panel-title">Score Range</div>
+          <div class="filter-panel-title">Tier Range</div>
           <div class="dual-range-wrap" id="dualRangeWrap">
             <div class="dual-range-track"></div>
             <div class="dual-range-fill" id="dualRangeFill"></div>
-            <div class="dual-thumb-label-min" id="thumbLabelMin">0</div>
-            <div class="dual-thumb-label-max" id="thumbLabelMax">10</div>
-            <div class="dual-thumb-label-joined" id="thumbLabelJoined">0</div>
-            <input class="dual-range-input" id="scoreRangeMin" type="range" min="0" max="10" step="0.5" value="0">
-            <input class="dual-range-input" id="scoreRangeMax" type="range" min="0" max="10" step="0.5" value="10">
+            <div class="dual-thumb-label-min" id="thumbLabelMin">F</div>
+            <div class="dual-thumb-label-max" id="thumbLabelMax">S</div>
+            <div class="dual-thumb-label-joined" id="thumbLabelJoined">F</div>
+            <input class="dual-range-input" id="scoreRangeMin" type="range" min="1" max="10" step="1.5" value="1">
+            <input class="dual-range-input" id="scoreRangeMax" type="range" min="1" max="10" step="1.5" value="10">
             <div class="dual-joined-thumb" id="dualJoinedThumb"></div>
+          </div>
+          <div class="dual-range-tiers">
+            <span style="color:#e2493f">F</span><span style="color:#ea6b45">E</span><span style="color:#f0954a">D</span><span style="color:#e8c94a">C</span><span style="color:#4fc3e0">B</span><span style="color:#4ecb7d">A</span><span style="color:#ffd23f">S</span>
           </div>
           <div class="filter-panel-footer" style="margin-top:1.8rem">
             <span class="filter-count-badge" id="scoreFilterCount"></span>
@@ -1949,7 +1950,7 @@ function _renderFeedCard(item, username) {
       <div class="feed-card-artist">${esc(item.artist)}</div>
       <div class="feed-card-time">${_timeAgo(item.ratedAt)}</div>
     </div>
-    <div class="feed-card-score" style="color:${scoreColor(item.score)}">${fmt(item.score)}</div>
+    <div class="feed-card-score" style="color:${scoreColor(item.score)}">${scoreToTier(item.score).key}</div>
   </div>`;
 }
 
@@ -2012,7 +2013,7 @@ function _renderCommunityFeed() {
         <div class="feed-card-artist">${esc(item.artist)}</div>
         <div class="feed-card-time">${_timeAgo(item.ratedAt)}</div>
       </div>
-      <div class="feed-card-score" style="color:${scoreColor(item.score)}">${fmt(item.score)}</div>
+      <div class="feed-card-score" style="color:${scoreColor(item.score)}">${scoreToTier(item.score).key}</div>
     </div>`;
   }).join('');
 
@@ -2167,8 +2168,8 @@ function renderUserProfile(el, username) {
   const median = sorted_s.length % 2 === 0
     ? ((sorted_s[sorted_s.length/2-1] + sorted_s[sorted_s.length/2]) / 2)
     : (sorted_s[Math.floor(sorted_s.length/2)] || 0);
-  const bangers = ratings_u.filter(r => r.score >= 9).length;
-  const tens = ratings_u.filter(r => r.score === 10).length;
+  const bangers = ratings_u.filter(r => r.score >= 8.5).length; // A tier or better
+  const tens = ratings_u.filter(r => r.score === 10).length; // S tier
 
   // Top 5 tracks
   const top5 = [...ratings_u].sort((a,b) => b.score - a.score).slice(0,5);
@@ -2179,7 +2180,7 @@ function renderUserProfile(el, username) {
     return `<div class="activity-row">
       ${artHtml}
       <div class="activity-info"><div class="activity-title">${esc(r.title)}</div><div class="activity-sub">${esc(r.artist)}</div></div>
-      <div class="activity-score" style="color:${scoreColor(r.score)}">${fmt(r.score)}</div>
+      <div class="activity-score" style="color:${scoreColor(r.score)}">${scoreToTier(r.score).key}</div>
     </div>`;
   }).join('');
 
@@ -2216,8 +2217,8 @@ function renderUserProfile(el, username) {
         <div class="profile-stat"><div class="profile-stat-num">${s.count}</div><div class="profile-stat-label">Rated</div></div>
         <div class="profile-stat"><div class="profile-stat-num">${s.count ? avg.toFixed(1) : '—'}</div><div class="profile-stat-label">Avg Score</div></div>
         <div class="profile-stat"><div class="profile-stat-num">${s.count ? median.toFixed(1) : '—'}</div><div class="profile-stat-label">Median</div></div>
-        <div class="profile-stat"><div class="profile-stat-num">${bangers}</div><div class="profile-stat-label">9+ Bangers</div></div>
-        <div class="profile-stat"><div class="profile-stat-num">${tens}</div><div class="profile-stat-label">Perfect 10s</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" style="color:var(--tier-a)">${bangers}</div><div class="profile-stat-label">A+ Tracks</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" style="color:var(--tier-s)">${tens}</div><div class="profile-stat-label">S Tier</div></div>
       </div>
     </div>
     ${top5.length ? `
@@ -2263,79 +2264,116 @@ function animateCount(el, target, duration, isFloat) {
   requestAnimationFrame(tick);
 }
 
-// Score → smooth red→yellow→green gradient
-function scoreColor(score) {
-  const s = Math.max(0, Math.min(10, Number(score)));
-  const t = s / 10; // 0 at 1, 1 at 10
-  // Red #e05c5c → Yellow #e8c95a → Green #5dba7a
-  let r, g, b;
-  if (t < 0.5) {
-    const u = t / 0.5;
-    r = Math.round(224 + (232 - 224) * u);   // 224→232
-    g = Math.round(92  + (201 - 92)  * u);   // 92→201
-    b = Math.round(92  + (90  - 92)  * u);   // 92→90
-  } else {
-    const u = (t - 0.5) / 0.5;
-    r = Math.round(232 + (93  - 232) * u);   // 232→93
-    g = Math.round(201 + (186 - 201) * u);   // 201→186
-    b = Math.round(90  + (122 - 90)  * u);   // 90→122
-  }
-  return `rgb(${r},${g},${b})`;
+// ── Tier rating system (S / A / B / C / D / E / F) ──────────────
+// Each tier anchors to a numeric value (kept for sorting, averaging,
+// and backward-compatibility with any older 0–10 decimal ratings).
+const TIERS = [
+  { key:'S', value:10,  color:'#ffd23f', label:'Transcendent', desc:'A perfect one. Life-changing, no notes.' },
+  { key:'A', value:8.5, color:'#4ecb7d', label:'Excellent',     desc:'Genuinely great. Barely any skips.' },
+  { key:'B', value:7,   color:'#4fc3e0', label:'Good',          desc:'Solid and enjoyable, keeps pulling you back.' },
+  { key:'C', value:5.5, color:'#e8c94a', label:'Decent',        desc:'Fine — a few good moments, nothing special.' },
+  { key:'D', value:4,   color:'#f0954a', label:'Mediocre',      desc:'Mostly forgettable, wouldn\u2019t replay.' },
+  { key:'E', value:2.5, color:'#ea6b45', label:'Bad',           desc:'Rough listen, had to push through it.' },
+  { key:'F', value:1,   color:'#e2493f', label:'Trash',         desc:'Actively unpleasant. Never again.' },
+];
+const TIER_MIN = 1, TIER_MAX = 10, TIER_STEP = 1.5;
+function tierByKey(key) { return TIERS.find(t => t.key === key) || TIERS[3]; }
+function scoreToTier(score) {
+  const s = Number(score);
+  let best = TIERS[3], bestDiff = Infinity;
+  for (const t of TIERS) { const d = Math.abs(t.value - s); if (d < bestDiff) { bestDiff = d; best = t; } }
+  return best;
 }
 
-// Build SVG ring HTML for a score
+// Score → tier color (kept name for compatibility with the rest of the app)
+function scoreColor(score) { return scoreToTier(score).color; }
+
+// Build SVG ring HTML for a score — shows the tier letter, colored & chunky
 function ringHTML(score) {
-  const s = Number(score);
+  const t = scoreToTier(score);
   const r = 22;
   const circ = 2 * Math.PI * r;
-  const pct = s / 10; // 1→0%, 10→100%
+  const pct = t.value / 10;
   const offset = circ * (1 - pct);
-  const color = scoreColor(s);
   return `
     <div class="score-ring">
       <svg viewBox="0 0 54 54" xmlns="http://www.w3.org/2000/svg">
         <circle class="score-ring-track" cx="27" cy="27" r="${r}"/>
         <circle class="score-ring-fill draw-on" cx="27" cy="27" r="${r}"
-          stroke="${color}"
+          stroke="${t.color}"
           stroke-dasharray="${circ}"
           stroke-dashoffset="${offset}"
           style="--ring-circ:${circ};--ring-offset:${offset}"/>
       </svg>
       <div class="score-ring-inner">
-        <div class="score-ring-num">${fmt(score)}</div>
-        <div class="score-ring-denom">/10</div>
+        <div class="score-ring-num" style="color:${t.color}">${t.key}</div>
       </div>
     </div>`;
 }
 
-// Slider fill + display update
-function onSliderInput(slider, valId, saveBtnId) {
-  const v = parseFloat(slider.value);
-  const pct = (v / 10) * 100;
-  slider.style.setProperty('--pct', pct + '%');
-  const valEl = document.getElementById(valId);
-  if (valEl) valEl.innerHTML = fmt(v) + '<span>/10</span>';
-  if (saveBtnId) {
-    const btn = document.getElementById(saveBtnId);
-    if (btn) btn.disabled = false;
-  }
-  // Update the appropriate guide
-  if (valId === 'sliderVal') updateRatingGuide(v, 'ratingGuide');
-  if (valId === 'modalSliderVal') updateRatingGuide(v, 'modalRatingGuide');
+// Render the row of 7 tappable tier chips
+function tierPickerHTML(idPrefix, selectedScore, small) {
+  const sel = scoreToTier(selectedScore);
+  const cls = small ? 'tier-chip tier-chip-sm' : 'tier-chip';
+  return TIERS.map(t => `<button type="button" class="${cls}${t.key===sel.key?' active':''}" data-tier="${t.key}"
+      style="--tc:${t.color}" onclick="${idPrefix}">${t.key}</button>`).join('');
 }
 
-// Initialize a slider to a given value without triggering save-btn logic
+// Highlight the active chip + hidden value + guide text for a picker
+function _syncTierPicker(pickerId, hiddenId, guideId, score) {
+  const t = scoreToTier(score);
+  const picker = document.getElementById(pickerId);
+  if (picker) picker.querySelectorAll('.tier-chip').forEach(c => c.classList.toggle('active', c.dataset.tier === t.key));
+  const hidden = document.getElementById(hiddenId);
+  if (hidden) hidden.value = t.value;
+  if (guideId) updateRatingGuide(t.value, guideId);
+  return t;
+}
+
+// Main "Add Music" tier picker
+function pickTierMain(tierKey) {
+  const t = tierByKey(tierKey);
+  _syncTierPicker('tierPicker-main', 'ratingSlider', 'ratingGuide', t.value);
+  const btn = document.getElementById('rateSaveBtn');
+  if (btn) btn.disabled = false;
+}
+
+// Edit modal tier picker
+function pickTierModal(tierKey) {
+  const t = tierByKey(tierKey);
+  _syncTierPicker('tierPicker-modal', 'modalRatingSlider', 'modalRatingGuide', t.value);
+}
+
+// Album track inline tier picker
+function pickTrackTier(ai, ti, tierKey) {
+  const t = tierByKey(tierKey);
+  const picker = document.getElementById(`atp-${ai}-${ti}`);
+  if (picker) picker.querySelectorAll('.tier-chip').forEach(c => c.classList.toggle('active', c.dataset.tier === t.key));
+  const hidden = document.getElementById(`ats-${ai}-${ti}`);
+  if (hidden) hidden.value = t.value;
+  const guide = document.getElementById(`atsg-${ai}-${ti}`);
+  if (guide) { guide.textContent = t.label; guide.style.color = t.color; }
+}
+
+// Shared markup for an album track's inline tier picker (used for both rated & unrated rows)
+function _trackInlineRatingHTML(ai, ti, score, saveOnclick) {
+  const t = scoreToTier(score);
+  const chips = TIERS.map(tr => `<button type="button" class="tier-chip tier-chip-sm${tr.key===t.key?' active':''}"
+      data-tier="${tr.key}" style="--tc:${tr.color}" onclick="pickTrackTier(${ai},${ti},'${tr.key}')">${tr.key}</button>`).join('');
+  return `
+        <div class="album-track-inline-slider" id="atsl-${ai}-${ti}">
+          <input type="hidden" id="ats-${ai}-${ti}" value="${t.value}">
+          <div class="tier-picker tier-picker-sm" id="atp-${ai}-${ti}">${chips}</div>
+          <span class="album-track-inline-guide" id="atsg-${ai}-${ti}" style="color:${t.color}">${t.label}</span>
+          <button class="atsl-save-btn" onclick="${saveOnclick}">Save</button>
+        </div>`;
+}
+
+// Initialize a picker to a given value (used when opening the rating card / modal)
 function setSlider(sliderId, valId, value) {
-  const slider = document.getElementById(sliderId);
-  if (!slider) return;
-  slider.value = value;
-  const pct = (value / 10) * 100;
-  slider.style.setProperty('--pct', pct + '%');
-  const valEl = document.getElementById(valId);
-  if (valEl) valEl.innerHTML = fmt(value) + '<span>/10</span>';
-  // Update guides on init too
-  if (valId === 'sliderVal') updateRatingGuide(value, 'ratingGuide');
-  if (valId === 'modalSliderVal') updateRatingGuide(value, 'modalRatingGuide');
+  const prefix = sliderId === 'modalRatingSlider' ? 'modal' : 'main';
+  const guideId = prefix === 'modal' ? 'modalRatingGuide' : 'ratingGuide';
+  _syncTierPicker('tierPicker-' + prefix, sliderId, guideId, value);
 }
 
 let ratings = []; // loaded from Supabase after login
@@ -2759,7 +2797,7 @@ function renderSearchResults(tracks) {
   el.innerHTML = tracks.map(d => {
     const item = trackToItem(d);
     const existing = ratings.find(r => r.id === item.id);
-    const ratedBadge = existing ? `<span class="search-result-badge">${fmt(existing.score)}/10</span>` : '';
+    const ratedBadge = existing ? `<span class="search-result-badge" style="color:${scoreColor(existing.score)}">${scoreToTier(existing.score).key}</span>` : '';
     const safeId = esc(item.id);
     return `<div class="search-result-item${existing?' already-rated':''}" onclick="selectSearchResult('${safeId}')" data-item='${JSON.stringify(item).replace(/'/g,"&#39;")}'>
       <img class="search-result-art" src="${esc(item.imageUrl)}" alt="" onerror="this.style.display='none'">
@@ -2815,27 +2853,18 @@ function showFetchedCard(item) {
   document.getElementById('fetchedMeta').textContent = [item.year, item.album, item.durationFmt || (item.duration ? msToTime(item.duration) : '')].filter(Boolean).join('  ·  ');
   document.getElementById('fetchedLink').href = item.spotifyUrl;
 
-  const initVal = existing ? existing.score : 5;
+  const initVal = existing ? existing.score : 5.5;
   setSlider('ratingSlider', 'sliderVal', initVal);
   document.getElementById('fetchNotes').value = existing ? (existing.notes || '') : '';
 
-  // If no existing rating, keep save btn disabled until user moves slider
+  // If no existing rating, keep save btn disabled until user picks a tier
   const saveBtn = document.getElementById('rateSaveBtn');
   if (existing) {
     saveBtn.disabled = false;
-    saveBtn.textContent = `Update Rating (was ${fmt(existing.score)}/10)`;
-    // Also enable on any slider move
-    document.getElementById('ratingSlider').oninput = function() {
-      onSliderInput(this, 'sliderVal', null);
-      saveBtn.disabled = false;
-    };
+    saveBtn.textContent = `Update Rating (was ${scoreToTier(existing.score).key})`;
   } else {
     saveBtn.disabled = true;
     saveBtn.textContent = 'Save Rating';
-    document.getElementById('ratingSlider').oninput = function() {
-      onSliderInput(this, 'sliderVal', null);
-      saveBtn.disabled = false;
-    };
   }
 
   document.getElementById('fetchedCard').classList.add('visible');
@@ -2850,8 +2879,9 @@ function saveFetchedRating() {
   const isUpdate = idx >= 0;
   if (isUpdate) ratings[idx] = entry; else ratings.push(entry);
   saveRatings();
-  showToast(isUpdate ? `Rating updated to ${fmt(score)}/10 ✓` : `"${currentFetched.title}" rated ${fmt(score)}/10 ✓`);
-  document.getElementById('rateSaveBtn').textContent = `Update Rating (was ${fmt(score)}/10)`;
+  const tierKey = scoreToTier(score).key;
+  showToast(isUpdate ? `Rating updated to ${tierKey} tier ✓` : `"${currentFetched.title}" rated ${tierKey} tier ✓`);
+  document.getElementById('rateSaveBtn').textContent = `Update Rating (was ${tierKey})`;
   // Heartbeat on any visible score ring
   document.querySelectorAll('.score-ring').forEach(r => {
     r.classList.remove('heartbeat');
@@ -2861,39 +2891,17 @@ function saveFetchedRating() {
   });
 }
 
-const RATING_GUIDES = [
-  { max: 0,   label: 'Unlistenable' },
-  { max: 0.5, label: 'Atrocious'    },
-  { max: 1,   label: 'Terrible'     },
-  { max: 1.5, label: 'Awful'        },
-  { max: 2,   label: 'Bad'          },
-  { max: 2.5, label: 'Weak'         },
-  { max: 3,   label: 'Poor'         },
-  { max: 3.5, label: 'Flawed'       },
-  { max: 4,   label: 'Mediocre'     },
-  { max: 4.5, label: 'Tolerable'    },
-  { max: 5,   label: 'Okay'         },
-  { max: 5.5, label: 'Alright'      },
-  { max: 6,   label: 'Decent'       },
-  { max: 6.5, label: 'Solid'        },
-  { max: 7,   label: 'Good'         },
-  { max: 7.5, label: 'Very Good'    },
-  { max: 8,   label: 'Great'        },
-  { max: 8.5, label: 'Excellent'    },
-  { max: 9,   label: 'Incredible'   },
-  { max: 9.5, label: 'Masterful'    },
-  { max: 10,  label: 'Perfect'      },
-];
-
+// getRatingGuide returns the tier object itself — .label and .color match the
+// shape older code expects, plus .key and .desc for the fuller tier description.
 function getRatingGuide(score) {
-  return RATING_GUIDES.find(g => score <= g.max) || RATING_GUIDES[RATING_GUIDES.length - 1];
+  return scoreToTier(score);
 }
 
 function updateRatingGuide(score, elId) {
   const el = document.getElementById(elId);
   if (!el) return;
-  const g = getRatingGuide(parseFloat(score));
-  el.innerHTML = `<span class="guide-label" style="color:${scoreColor(score)}">${g.label}</span>`;
+  const t = scoreToTier(score);
+  el.innerHTML = `<span class="guide-label" style="color:${t.color}">${t.key} · ${t.label}</span><span class="guide-desc">${t.desc}</span>`;
 }
 function switchTab(t) {
   ['explore','rankings','albums','stats','community'].forEach(id => {
@@ -2930,10 +2938,10 @@ function clearSearch() {
 // ── Export CSV ────────────────────────────────────────────
 function exportCSV() {
   if (!ratings.length) { showToast('Nothing to export yet'); return; }
-  const cols = ['Title','Artist','Album','Year','Score','Notes','Rated At'];
+  const cols = ['Title','Artist','Album','Year','Tier','Score','Notes','Rated At'];
   const rows = ratings.map(r => [
     r.title, r.artist, r.album||'', r.year||'',
-    fmt(r.score), (r.notes||'').replace(/"/g,'""'),
+    scoreToTier(r.score).key, fmt(r.score), (r.notes||'').replace(/"/g,'""'),
     r.ratedAt ? new Date(r.ratedAt).toISOString().slice(0,10) : ''
   ].map(v => `"${v}"`).join(','));
   const csv = [cols.join(','), ...rows].join('\n');
@@ -2956,7 +2964,7 @@ function toggleScoreFilterPanel() {
   btn.classList.toggle('open', isOpen);
   if (isOpen) {
     _initDualRange();
-    const lo = scoreFilterMin ?? 0, hi = scoreFilterMax ?? 10;
+    const lo = scoreFilterMin ?? TIER_MIN, hi = scoreFilterMax ?? TIER_MAX;
     const minEl = document.getElementById('scoreRangeMin');
     const maxEl = document.getElementById('scoreRangeMax');
     if (minEl) minEl.value = lo;
@@ -2997,14 +3005,14 @@ function _initDualRange() {
   minEl.style.pointerEvents = 'none';
   maxEl.style.pointerEvents = 'none';
 
-  const STEP = 0.5, MIN = 0, MAX = 10;
-  const snap  = v => Math.round(v / STEP) * STEP;
+  const STEP = TIER_STEP, MIN = TIER_MIN, MAX = TIER_MAX;
+  const snap  = v => Math.round((v - MIN) / STEP) * STEP + MIN;
   const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
 
-  // Convert clientX → slider value
+  // Convert clientX → slider value (snapped to the nearest tier anchor)
   function xToVal(clientX) {
     const rect = wrap.getBoundingClientRect();
-    return clamp(snap(((clientX - rect.left) / rect.width) * 10), MIN, MAX);
+    return clamp(snap(MIN + ((clientX - rect.left) / rect.width) * (MAX - MIN)), MIN, MAX);
   }
 
   // Track whether any thumb drag is in progress (prevents panel from closing on mouseup)
@@ -3152,13 +3160,13 @@ function _updateDualRangeUI(lo, hi) {
   const minThumb    = document.getElementById('dualMinThumb');
   const maxThumb    = document.getElementById('dualMaxThumb');
   const wrap        = document.getElementById('dualRangeWrap');
-  const isDefault   = lo === 0 && hi === 10;
+  const isDefault   = lo === TIER_MIN && hi === TIER_MAX;
   const joined      = lo === hi;
 
-  const leftPct  = (lo / 10) * 100;
-  const rightPct = (hi / 10) * 100;
+  const leftPct  = ((lo - TIER_MIN) / (TIER_MAX - TIER_MIN)) * 100;
+  const rightPct = ((hi - TIER_MIN) / (TIER_MAX - TIER_MIN)) * 100;
   const clamp    = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
-  const fmt      = v => v % 1 === 0 ? String(v) : v.toFixed(1);
+  const fmt      = v => scoreToTier(v).key;
 
   if (fill) { fill.style.left = leftPct + '%'; fill.style.width = (rightPct - leftPct) + '%'; }
 
@@ -3211,7 +3219,7 @@ function _updatePillUI() {}    // legacy shim
 function setScoreFilter(min, max) {
   scoreFilterMin = (min !== '' && min !== null && !isNaN(min)) ? parseFloat(min) : null;
   scoreFilterMax = (max !== '' && max !== null && !isNaN(max)) ? parseFloat(max) : null;
-  const lo = scoreFilterMin ?? 0, hi = scoreFilterMax ?? 10;
+  const lo = scoreFilterMin ?? TIER_MIN, hi = scoreFilterMax ?? TIER_MAX;
   const minEl = document.getElementById('scoreRangeMin');
   const maxEl = document.getElementById('scoreRangeMax');
   if (minEl) minEl.value = lo;
@@ -3225,9 +3233,9 @@ function clearScoreFilter() {
   scoreFilterMax = null;
   const minEl = document.getElementById('scoreRangeMin');
   const maxEl = document.getElementById('scoreRangeMax');
-  if (minEl) minEl.value = 0;
-  if (maxEl) maxEl.value = 10;
-  _updateDualRangeUI(0, 10);
+  if (minEl) minEl.value = TIER_MIN;
+  if (maxEl) maxEl.value = TIER_MAX;
+  _updateDualRangeUI(TIER_MIN, TIER_MAX);
   renderRankings();
 }
 
@@ -3261,14 +3269,14 @@ function renderRankings() {
 
   const ratedCount = ratings.length;
   const avgVal = parseFloat(avg);
-  const bangersCount = ratings.filter(r=>r.score>=9).length;
-  const perfectCount = ratings.filter(r=>r.score===10).length;
+  const bangersCount = ratings.filter(r=>r.score>=8.5).length; // A tier or better
+  const perfectCount = ratings.filter(r=>r.score===10).length; // S tier
 
   statsBar.innerHTML = `
     <div class="stat"><div class="stat-num" id="sbn-rated">0</div><div class="stat-label">Rated</div></div>
     <div class="stat"><div class="stat-num" id="sbn-avg">0</div><div class="stat-label">Avg Score</div></div>
-    <div class="stat"><div class="stat-num" id="sbn-bangers">0</div><div class="stat-label">9+ Bangers</div></div>
-    <div class="stat"><div class="stat-num" id="sbn-perfect">0</div><div class="stat-label">Perfect 10s</div></div>
+    <div class="stat"><div class="stat-num" id="sbn-bangers" style="color:var(--tier-a)">0</div><div class="stat-label">A+ Tracks</div></div>
+    <div class="stat"><div class="stat-num" id="sbn-perfect" style="color:var(--tier-s)">0</div><div class="stat-label">S Tier</div></div>
   `;
 
   // staggered count-ups
@@ -3302,8 +3310,8 @@ function renderRankings() {
   if (countEl) countEl.textContent = hasScoreFilter ? `${filtered.length} shown` : '';
   // Keep UI in sync (slider may have been set programmatically)
   if (hasScoreFilter) {
-    const lo = scoreFilterMin ?? 0;
-    const hi = scoreFilterMax ?? 10;
+    const lo = scoreFilterMin ?? TIER_MIN;
+    const hi = scoreFilterMax ?? TIER_MAX;
     _updateDualRangeUI(lo, hi);
   }
 
@@ -3489,7 +3497,7 @@ function _renderAlbumGrid() {
       <div class="vinyl-label-text">
         <div class="vinyl-label-name" title="${esc(a.name)}">${esc(a.name)}</div>
         <div class="vinyl-label-artist">${esc(a.artist)}</div>
-        <div class="vinyl-label-score" style="color:${col}">${fmt(a.score)}<span style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--muted)">/10</span></div>
+        <div class="vinyl-label-score" style="color:${col}">${scoreToTier(a.score).key}</div>
       </div>
     </div>`;
   }).join('');
@@ -3610,16 +3618,10 @@ function _buildPanelHTML(ai, allTracks) {
       return `<div class="album-track-row" id="atr-${ai}-${ti}">
           <span class="album-track-num">${t.track_number || (ti+1)}</span>
           <span class="album-track-name">${esc(t.name || rated.title)}</span>
-          <span class="album-track-score" style="color:${sc}">${fmt(rated.score)}</span>
+          <span class="album-track-score" style="color:${sc}">${scoreToTier(rated.score).key}</span>
           <button class="album-track-edit" onclick="toggleAlbumTrackSlider(${ai},${ti},event)" title="Adjust">✎</button>
         </div>
-        <div class="album-track-inline-slider" id="atsl-${ai}-${ti}">
-          <input class="rating-slider" style="flex:1" type="range" min="0" max="10" step="0.5" value="${rated.score}"
-            id="ats-${ai}-${ti}" oninput="onAlbumTrackSlider(this,${ai},${ti})">
-          <span class="album-track-inline-val" id="atsv-${ai}-${ti}">${fmt(rated.score)}</span>
-          <span class="album-track-inline-guide" id="atsg-${ai}-${ti}" style="color:${scoreColor(rated.score)}">${getRatingGuide(rated.score).label}</span>
-          <button class="atsl-save-btn" onclick="saveAlbumTrackRating(${ai},${ti},'${esc(rated.id)}',event)">Save</button>
-        </div>
+        ${_trackInlineRatingHTML(ai, ti, rated.score, `saveAlbumTrackRating(${ai},${ti},'${esc(rated.id)}',event)`)}
         <div class="album-track-notes-row" id="atnr-${ai}-${ti}">
           <textarea class="album-track-notes-input" id="atn-${ai}-${ti}"
             placeholder="Notes…" onclick="event.stopPropagation()">${notesVal}</textarea>
@@ -3633,13 +3635,7 @@ function _buildPanelHTML(ai, allTracks) {
           <span class="album-track-score album-track-score-na">N/A</span>
           <button class="album-track-edit album-track-add" onclick="toggleAlbumTrackSlider(${ai},${ti},event)" title="Rate this track">+</button>
         </div>
-        <div class="album-track-inline-slider" id="atsl-${ai}-${ti}">
-          <input class="rating-slider" style="flex:1" type="range" min="0" max="10" step="0.5" value="5"
-            id="ats-${ai}-${ti}" oninput="onAlbumTrackSlider(this,${ai},${ti})">
-          <span class="album-track-inline-val" id="atsv-${ai}-${ti}">5</span>
-          <span class="album-track-inline-guide" id="atsg-${ai}-${ti}" style="color:${scoreColor(5)}">${getRatingGuide(5).label}</span>
-          <button class="atsl-save-btn" onclick="saveAlbumNewRating(${ai},${ti},'${safeTrackId}',event)">Save</button>
-        </div>
+        ${_trackInlineRatingHTML(ai, ti, 5.5, `saveAlbumNewRating(${ai},${ti},'${safeTrackId}',event)`)}
         <div class="album-track-notes-row" id="atnr-${ai}-${ti}">
           <textarea class="album-track-notes-input" id="atn-${ai}-${ti}"
             placeholder="Notes…" onclick="event.stopPropagation()"></textarea>
@@ -3655,7 +3651,7 @@ function _buildPanelHTML(ai, allTracks) {
     <div class="vinyl-expand-art" ${panelArtStyle}>
       ${panelArt}
       <div class="vinyl-expand-score-badge">
-        <div class="vinyl-expand-score-num" style="color:${col}">${fmt(a.score)}</div>
+        <div class="vinyl-expand-score-num" style="color:${col}">${scoreToTier(a.score).key}</div>
         <div class="vinyl-expand-score-sub">avg / 10</div>
       </div>
     </div>
@@ -3696,7 +3692,7 @@ async function _openBreak(ai, immediate) {
     <div class="vinyl-expand-art" ${panelArtStyle}>
       ${panelArt}
       <div class="vinyl-expand-score-badge">
-        <div class="vinyl-expand-score-num" style="color:${col}">${fmt(a.score)}</div>
+        <div class="vinyl-expand-score-num" style="color:${col}">${scoreToTier(a.score).key}</div>
         <div class="vinyl-expand-score-sub">avg / 10</div>
       </div>
     </div>
@@ -3760,13 +3756,7 @@ async function _openBreak(ai, immediate) {
     metaEl.textContent = `${a.artist}${a.year ? ' · ' + a.year : ''} · ${ratedCount}/${total} track${total !== 1 ? 's' : ''} rated`;
   }
 
-  // Init sliders
-  tracksToShow.forEach((t, ti) => {
-    if (t.ratedEntry) {
-      const s = document.getElementById(`ats-${ai}-${ti}`);
-      if (s) s.style.setProperty('--pct', (t.ratedEntry.score/10*100)+'%');
-    }
-  });
+  // (tier chips need no pct/fill init — the active chip carries the styling)
 }
 
 // Builds track row HTML for an album expand panel
@@ -3780,16 +3770,10 @@ function _buildTrackRows(ai, tracksToShow) {
       return `<div class="album-track-row" id="atr-${ai}-${ti}">
           <span class="album-track-num">${t.track_number || (ti+1)}</span>
           <span class="album-track-name">${esc(t.name || rated.title)}</span>
-          <span class="album-track-score" style="color:${sc}">${fmt(rated.score)}</span>
+          <span class="album-track-score" style="color:${sc}">${scoreToTier(rated.score).key}</span>
           <button class="album-track-edit" onclick="toggleAlbumTrackSlider(${ai},${ti},event)" title="Adjust">✎</button>
         </div>
-        <div class="album-track-inline-slider" id="atsl-${ai}-${ti}">
-          <input class="rating-slider" style="flex:1" type="range" min="0" max="10" step="0.5" value="${rated.score}"
-            id="ats-${ai}-${ti}" oninput="onAlbumTrackSlider(this,${ai},${ti})">
-          <span class="album-track-inline-val" id="atsv-${ai}-${ti}">${fmt(rated.score)}</span>
-          <span class="album-track-inline-guide" id="atsg-${ai}-${ti}" style="color:${scoreColor(rated.score)}">${getRatingGuide(rated.score).label}</span>
-          <button class="atsl-save-btn" onclick="saveAlbumTrackRating(${ai},${ti},'${esc(rated.id)}',event)">Save</button>
-        </div>
+        ${_trackInlineRatingHTML(ai, ti, rated.score, `saveAlbumTrackRating(${ai},${ti},'${esc(rated.id)}',event)`)}
         <div class="album-track-notes-row" id="atnr-${ai}-${ti}">
           <textarea class="album-track-notes-input" id="atn-${ai}-${ti}"
             placeholder="Notes…" onclick="event.stopPropagation()">${notesVal}</textarea>
@@ -3802,13 +3786,7 @@ function _buildTrackRows(ai, tracksToShow) {
           <span class="album-track-score album-track-score-na">N/A</span>
           <button class="album-track-edit album-track-add" onclick="toggleAlbumTrackSlider(${ai},${ti},event)" title="Rate this track">+</button>
         </div>
-        <div class="album-track-inline-slider" id="atsl-${ai}-${ti}">
-          <input class="rating-slider" style="flex:1" type="range" min="0" max="10" step="0.5" value="5"
-            id="ats-${ai}-${ti}" oninput="onAlbumTrackSlider(this,${ai},${ti})">
-          <span class="album-track-inline-val" id="atsv-${ai}-${ti}">5</span>
-          <span class="album-track-inline-guide" id="atsg-${ai}-${ti}" style="color:${scoreColor(5)}">${getRatingGuide(5).label}</span>
-          <button class="atsl-save-btn" onclick="saveAlbumNewRating(${ai},${ti},'${safeTrackId}',event)">Save</button>
-        </div>
+        ${_trackInlineRatingHTML(ai, ti, 5.5, `saveAlbumNewRating(${ai},${ti},'${safeTrackId}',event)`)}
         <div class="album-track-notes-row" id="atnr-${ai}-${ti}">
           <textarea class="album-track-notes-input" id="atn-${ai}-${ti}"
             placeholder="Notes…" onclick="event.stopPropagation()"></textarea>
@@ -3866,26 +3844,6 @@ function toggleAlbumTrackSlider(ai, ti, e) {
   const nr = document.getElementById(`atnr-${ai}-${ti}`);
   const isOpen = sl.classList.toggle('open');
   if (nr) nr.classList.toggle('open', isOpen);
-  // Init slider fill on first open
-  if (isOpen) {
-    const s = document.getElementById(`ats-${ai}-${ti}`);
-    if (s && !s.dataset.initDone) {
-      s.dataset.initDone = '1';
-      const v = parseFloat(s.value);
-      s.style.setProperty('--pct', (v/10*100)+'%');
-    }
-  }
-}
-
-function onAlbumTrackSlider(input, ai, ti) {
-  const v = parseFloat(input.value);
-  input.style.setProperty('--pct', (v/10*100)+'%');
-  document.getElementById(`atsv-${ai}-${ti}`).textContent = fmt(v);
-  const guide = document.getElementById(`atsg-${ai}-${ti}`);
-  if (guide) {
-    guide.textContent = getRatingGuide(v).label;
-    guide.style.color = scoreColor(v);
-  }
 }
 
 
@@ -3911,7 +3869,7 @@ function _patchTrackRow(ai, ti, score) {
   const row = document.getElementById(`atr-${ai}-${ti}`);
   if (!row) return;
   const scoreEl = row.querySelector('.album-track-score');
-  if (scoreEl) { scoreEl.textContent = fmt(score); scoreEl.style.color = scoreColor(score); }
+  if (scoreEl) { scoreEl.textContent = scoreToTier(score).key; scoreEl.style.color = scoreColor(score); }
 }
 
 function _patchTrackRowNewRating(ai, ti, score, newId) {
@@ -3921,7 +3879,7 @@ function _patchTrackRowNewRating(ai, ti, score, newId) {
   const scoreEl = row.querySelector('.album-track-score');
   if (scoreEl) {
     scoreEl.classList.remove('album-track-score-na');
-    scoreEl.textContent = fmt(score);
+    scoreEl.textContent = scoreToTier(score).key;
     scoreEl.style.color = scoreColor(score);
   }
   // Swap + button to ✎ edit button
@@ -3954,7 +3912,7 @@ function _patchAlbumScoreBadge(ai) {
   const breakEl = _getBreakForAlbum(ai);
   if (breakEl) {
     const badge = breakEl.querySelector('.vinyl-expand-score-num');
-    if (badge) { badge.textContent = fmt(a.score); badge.style.color = col; }
+    if (badge) { badge.textContent = scoreToTier(a.score).key; badge.style.color = col; }
     const meta = breakEl.querySelector('.vinyl-expand-meta');
     if (meta) {
       const allTracks = albumTrackCache[ai];
@@ -3966,7 +3924,7 @@ function _patchAlbumScoreBadge(ai) {
   const card = document.getElementById(`vi-${ai}`);
   if (card) {
     const lbl = card.querySelector('.vinyl-label-score');
-    if (lbl) lbl.innerHTML = `${fmt(a.score)}<span style="font-family:'DM Mono',monospace;font-size:.55rem;color:var(--muted)">/10</span>`;
+    if (lbl) lbl.innerHTML = `${scoreToTier(a.score).key}`;
     if (lbl) lbl.style.color = col;
   }
 }
@@ -3978,7 +3936,7 @@ function saveAlbumTrackRating(ai, ti, id, e) {
   const idx = ratings.findIndex(r => r.id === id);
   if (idx >= 0) { ratings[idx].score = v; ratings[idx].ratedAt = Date.now(); ratings[idx].notes = notes; }
   saveRatings();
-  showToast(`Updated to ${fmt(v)}/10 ✓`);
+  showToast(`Updated to ${scoreToTier(v).key} tier ✓`);
   // Update albumsData in-place and patch DOM without re-rendering
   _syncAlbumData(ai);
   _patchTrackRow(ai, ti, v);
@@ -4027,7 +3985,7 @@ function saveAlbumNewRating(ai, ti, spotifyTrackId, e) {
     ratings.push(newEntry);
   }
   saveRatings();
-  showToast(`"${trackName}" rated ${fmt(v)}/10 ✓`);
+  showToast(`"${trackName}" rated ${scoreToTier(v).key} tier ✓`);
   // Update albumsData in-place and patch DOM without re-rendering
   _syncAlbumData(ai);
   _patchTrackRowNewRating(ai, ti, v, newEntry.id);
@@ -4051,28 +4009,21 @@ function renderStats() {
   const lowest = Math.min(...scores);
   const stddev = Math.sqrt(scores.reduce((s,v) => s + (v-avg)**2, 0) / scores.length);
 
-  // Score distribution: every 0.5 step from 0 to 10
-  const steps = [];
-  for (let v = 0; v <= 10; v += 0.5) steps.push(v);
-  const counts = steps.map(v => ratings.filter(r => r.score === v).length);
-  const maxCount = Math.max(...counts, 1);
+  // Tier breakdown — bucket every rating into one of the 7 tiers (S first, F last)
+  const tierCounts = TIERS.map(t => ({
+    tier: t,
+    count: ratings.filter(r => scoreToTier(r.score).key === t.key).length,
+  }));
+  const maxTierCount = Math.max(...tierCounts.map(t => t.count), 1);
 
-  function barGlow(v) {
-    if (v >= 9.5) return ';box-shadow:0 0 8px rgba(93,186,122,.35)';
-    return '';
-  }
-
-  const distHTML = steps.map((v, i) => {
-    const cnt = counts[i];
-    const heightPct = cnt === 0 ? 0 : Math.max(4, Math.round((cnt / maxCount) * 100));
-    const isWholeNum = Number.isInteger(v);
-    const col = scoreColor(v);
+  const distHTML = tierCounts.map(({ tier, count }) => {
+    const heightPct = count === 0 ? 0 : Math.max(6, Math.round((count / maxTierCount) * 100));
     return `<div class="dist-col">
-      <div class="dist-col-count">${cnt > 0 ? cnt : ''}</div>
+      <div class="dist-col-count">${count > 0 ? count : ''}</div>
       <div class="dist-col-bar-wrap">
-        <div class="dist-col-bar" data-height="${heightPct}" style="height:0%;background:${col}${barGlow(v)}" title="${fmt(v)}: ${cnt} song${cnt!==1?'s':''}"></div>
+        <div class="dist-col-bar" data-height="${heightPct}" style="height:0%;background:${tier.color}" title="${tier.key} — ${tier.label}: ${count} song${count!==1?'s':''}"></div>
       </div>
-      <div class="dist-col-label" style="opacity:${isWholeNum?'0.7':'0.3'}">${isWholeNum ? v : '·'}</div>
+      <div class="dist-col-label" style="color:${tier.color}">${tier.key}</div>
     </div>`;
   }).join('');
 
@@ -4115,18 +4066,10 @@ function renderStats() {
         <div class="activity-title">${esc(r.title)}</div>
         <div class="activity-sub">${esc(r.artist)}</div>
       </div>
-      <div class="activity-score">${fmt(r.score)}</div>
+      <div class="activity-score" style="color:${scoreColor(r.score)}">${scoreToTier(r.score).key}</div>
       <div class="activity-date">${when}</div>
     </div>`;
   }).join('');
-
-  // Score distribution by tier
-  const tierCounts = {
-    masterpiece: ratings.filter(r => r.score >= 9.5).length,
-    great: ratings.filter(r => r.score >= 7.5 && r.score < 9.5).length,
-    decent: ratings.filter(r => r.score >= 5 && r.score < 7.5).length,
-    meh: ratings.filter(r => r.score < 5).length,
-  };
 
   // Global stats: total ratings across all users, total users
   const allRatingsFlat = Object.values(_communityRatingsCache).flat();
@@ -4138,6 +4081,7 @@ function renderStats() {
   const topArtistForStrip = topArtists.length ? topArtists[0] : null;
   const topArtistAvg = topArtistForStrip ? (Math.round(topArtistForStrip.avg * 2) / 2).toFixed(1) : '—';
   const topArtistName = topArtistForStrip ? topArtistForStrip.name : '—';
+  const highestTier = scoreToTier(highest), lowestTier = scoreToTier(lowest);
 
   el.innerHTML = `
     <div class="global-stats-strip">
@@ -4160,26 +4104,16 @@ function renderStats() {
     <div class="stat-cards">
       <div class="stat-card"><div class="stat-card-num" id="sc-avg">—</div><div class="stat-card-label">Average</div></div>
       <div class="stat-card"><div class="stat-card-num" id="sc-med">—</div><div class="stat-card-label">Median</div></div>
-      <div class="stat-card"><div class="stat-card-num" id="sc-hi">—</div><div class="stat-card-label">Highest</div></div>
-      <div class="stat-card"><div class="stat-card-num" id="sc-lo">—</div><div class="stat-card-label">Lowest</div></div>
+      <div class="stat-card"><div class="stat-card-num" style="color:${highestTier.color}">${highestTier.key}</div><div class="stat-card-label">Highest</div></div>
+      <div class="stat-card"><div class="stat-card-num" style="color:${lowestTier.color}">${lowestTier.key}</div><div class="stat-card-label">Lowest</div></div>
       <div class="stat-card"><div class="stat-card-num" id="sc-sd">—</div><div class="stat-card-label">Std Dev</div></div>
     </div>
 
     <div class="stats-section">
-      <div class="stats-section-title">Score Distribution</div>
+      <div class="stats-section-title">Tier Breakdown</div>
       <div class="dist-chart-wrap">
         <div class="dist-chart-inner">${distHTML}</div>
         <div class="dist-axis-line"></div>
-      </div>
-    </div>
-
-    <div class="stats-section">
-      <div class="stats-section-title">Rating Tiers</div>
-      <div class="stat-cards">
-        <div class="stat-card" style="border-color:rgba(93,186,122,.3)"><div class="stat-card-num" id="sc-t1" style="color:${scoreColor(10)}">—</div><div class="stat-card-label">Masterpiece (9.5–10)</div></div>
-        <div class="stat-card" style="border-color:rgba(93,186,122,.2)"><div class="stat-card-num" id="sc-t2" style="color:${scoreColor(8.5)}">—</div><div class="stat-card-label">Great (7.5–9)</div></div>
-        <div class="stat-card" style="border-color:rgba(200,169,110,.15)"><div class="stat-card-num" id="sc-t3" style="color:${scoreColor(6)}">—</div><div class="stat-card-label">Decent (5–7)</div></div>
-        <div class="stat-card" style="border-color:rgba(224,92,92,.2)"><div class="stat-card-num" id="sc-t4" style="color:${scoreColor(2.5)}">—</div><div class="stat-card-label">Meh (0–4.5)</div></div>
       </div>
     </div>
 
@@ -4195,17 +4129,11 @@ function renderStats() {
     </div>
   `;
 
-  // Staggered count-up for all stat cards
+  // Staggered count-up for numeric stat cards (Highest/Lowest are tier letters, set directly above)
   const dur = 1500;
   setTimeout(() => animateCount(document.getElementById('sc-avg'), avg,                    dur, 2), 0);
   setTimeout(() => animateCount(document.getElementById('sc-med'), median,                 dur, 1), 100);
-  setTimeout(() => animateCount(document.getElementById('sc-hi'),  highest,                dur, 1), 200);
-  setTimeout(() => animateCount(document.getElementById('sc-lo'),  lowest,                 dur, 1), 300);
-  setTimeout(() => animateCount(document.getElementById('sc-sd'),  stddev,                 dur, 2), 400);
-  setTimeout(() => animateCount(document.getElementById('sc-t1'),  tierCounts.masterpiece, dur, false), 520);
-  setTimeout(() => animateCount(document.getElementById('sc-t2'),  tierCounts.great,       dur, false), 620);
-  setTimeout(() => animateCount(document.getElementById('sc-t3'),  tierCounts.decent,      dur, false), 720);
-  setTimeout(() => animateCount(document.getElementById('sc-t4'),  tierCounts.meh,         dur, false), 820);
+  setTimeout(() => animateCount(document.getElementById('sc-sd'),  stddev,                 dur, 2), 200);
 
   // Staggered bar grow-in
   requestAnimationFrame(() => {
@@ -4254,8 +4182,7 @@ function saveModalRating() {
   saveRatings();
   closeModal();
   renderRankings();
-  showToast(`Updated to ${fmt(score)}/10 ✓`);
-  // Heartbeat the matching score ring in the list
+  showToast(`Updated to ${scoreToTier(score).key} tier ✓`);
   setTimeout(() => {
     document.querySelectorAll('.score-ring').forEach(r => {
       r.classList.remove('heartbeat');
@@ -4534,20 +4461,15 @@ document.addEventListener('DOMContentLoaded', async function() {
       </div>
     </div>
     <div class="modal-rating-label">Update your rating</div>
-    <div class="slider-row">
-      <div class="slider-val" id="modalSliderVal">—<span>/10</span></div>
-      <div class="slider-wrap">
-        <input class="rating-slider" id="modalRatingSlider" type="range" min="0" max="10" step="0.5" value="5"
-          oninput="onSliderInput(this, 'modalSliderVal', null)">
-        <div class="slider-ticks">
-          <span class="slider-tick">0</span><span class="slider-tick">1</span>
-          <span class="slider-tick">2</span><span class="slider-tick">3</span>
-          <span class="slider-tick">4</span><span class="slider-tick">5</span>
-          <span class="slider-tick">6</span><span class="slider-tick">7</span>
-          <span class="slider-tick">8</span><span class="slider-tick">9</span>
-          <span class="slider-tick">10</span>
-        </div>
-      </div>
+    <input type="hidden" id="modalRatingSlider" value="5.5">
+    <div class="tier-picker" id="tierPicker-modal">
+      <button type="button" class="tier-chip" data-tier="S" style="--tc:#ffd23f" onclick="pickTierModal('S')">S</button>
+      <button type="button" class="tier-chip" data-tier="A" style="--tc:#4ecb7d" onclick="pickTierModal('A')">A</button>
+      <button type="button" class="tier-chip" data-tier="B" style="--tc:#4fc3e0" onclick="pickTierModal('B')">B</button>
+      <button type="button" class="tier-chip" data-tier="C" style="--tc:#e8c94a" onclick="pickTierModal('C')">C</button>
+      <button type="button" class="tier-chip" data-tier="D" style="--tc:#f0954a" onclick="pickTierModal('D')">D</button>
+      <button type="button" class="tier-chip" data-tier="E" style="--tc:#ea6b45" onclick="pickTierModal('E')">E</button>
+      <button type="button" class="tier-chip" data-tier="F" style="--tc:#e2493f" onclick="pickTierModal('F')">F</button>
     </div>
     <div class="rating-guide" id="modalRatingGuide"></div>
     <button class="modal-save-btn" onclick="saveModalRating()">Update Rating</button>

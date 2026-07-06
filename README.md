@@ -1,6 +1,6 @@
 # Reverie — Personal Music Rankings
 
-Rate tracks 1–10, browse albums as vinyl records, and track your listening stats.
+Rate tracks on an S–F tier scale, browse albums as vinyl records, and track your listening stats.
 
 ## Files
 
