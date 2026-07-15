@@ -236,8 +236,8 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   transition:all .15s;font-family:'DM Sans',sans-serif}
 .btn-rate-save:hover{background:var(--accent);color:#1a1408;border-color:var(--accent)}
 .btn-rate-save:disabled{opacity:.3;cursor:not-allowed}
-.rating-guide{margin:.6rem 0 .75rem;min-height:1.3rem}
-.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:.95rem;font-weight:600;letter-spacing:.01em;color:var(--muted)}
+.rating-guide{margin:.6rem 0 .75rem;min-height:1.6rem}
+.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:.01em;color:var(--muted);transition:color .12s}
 
 /* ── Calibration ("is it really an X?") widget ── */
 .calibrate-box{margin:.2rem 0 1rem;padding:.85rem .9rem;background:var(--surface2);
@@ -1003,6 +1003,21 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   box-shadow:0 8px 32px rgba(0,0,0,.55);backdrop-filter:blur(16px)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ── Milestone celebration popup ── */
+.milestone-pop{position:fixed;top:5.5rem;left:50%;transform:translateX(-50%) translateY(-14px) scale(.96);
+  background:linear-gradient(160deg,rgba(200,169,110,.16) 0%,rgba(200,169,110,.05) 100%);
+  border:1px solid var(--border2);border-radius:14px;padding:.9rem 1.6rem;z-index:600;opacity:0;
+  transition:all .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;max-width:90vw;text-align:center;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);backdrop-filter:blur(16px)}
+.milestone-pop.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+.milestone-pop-title{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--accent2);margin-bottom:.2rem}
+.milestone-pop-sub{font-size:.78rem;color:var(--muted)}
+
+/* ── Community average line (shown while rating a track others have also rated) ── */
+.community-avg-line{display:none;align-items:center;gap:.4rem;font-size:.72rem;color:var(--muted);margin:.35rem 0 .1rem}
+.community-avg-badge{font-family:'Fredoka',sans-serif;font-weight:700;font-size:.8rem;
+  border:1.5px solid;border-radius:6px;padding:.05rem .4rem}
+
 /* ── Spotify drag-and-drop overlay ── */
 #drop-overlay{
   position:fixed;inset:0;z-index:900;
@@ -1526,6 +1541,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
           <div class="fetched-title" id="fetchedTitle"></div>
           <div class="fetched-artist" id="fetchedArtist"></div>
           <div class="fetched-meta" id="fetchedMeta"></div>
+          <div class="community-avg-line" id="communityAvgLine"></div>
           <a class="fetched-link" id="fetchedLink" href="#" target="_blank">Open in Spotify ↗</a>
           <div class="rating-section">
             <div class="rating-section-label">Your rating</div>
@@ -1533,6 +1549,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
               <div class="slider-val" id="sliderVal">—<span>/10</span></div>
               <div class="slider-wrap">
                 <input class="rating-slider" id="ratingSlider" type="range" min="0" max="10" step="0.5" value="5"
+                  title="Tip: 0–9 jumps, ↑/↓ fine-tunes, Enter saves"
                   oninput="onSliderInput(this, 'sliderVal', 'rateSaveBtn')">
                 <div class="slider-ticks">
                   <span class="slider-tick">0</span><span class="slider-tick">1</span>
@@ -1545,9 +1562,6 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
               </div>
             </div>
             <div class="rating-guide" id="ratingGuide"></div>
-            <div style="font-family:'DM Mono',monospace;font-size:.6rem;color:var(--muted);opacity:.55;margin:-.3rem 0 .7rem">
-              Tip: press 0–9 to jump, ↑/↓ to fine-tune, Enter to save
-            </div>
             <div class="calibrate-box" id="calibrateBox">
               <div class="calibrate-label">⚖️ Sanity check — how does this compare?</div>
               <div id="calibrateRows"></div>
@@ -1955,6 +1969,11 @@ function initApp(username) {
 
   // ratings[] already loaded from Supabase before initApp is called
 
+  // Warm the community ratings cache in the background (non-blocking) so the
+  // "community average" line has data ready the first time someone rates a track,
+  // without forcing them through the Community tab first.
+  _fetchAllRatings().catch(() => {});
+
   // Patch deleteRating to also remove from Supabase
   const _origDelete = window.deleteRating;
   window.deleteRating = async function(id) {
@@ -2320,31 +2339,31 @@ function animateCount(el, target, duration, isFloat) {
 }
 
 // ── Tier rating system (S / A / B / C / D / E / F) ──────────────
-// Each entry anchors a rich, distinct description to a 0.5 step on the 0–10 scale.
-// The goal is to give every value real meaning, so picking between neighbors
-// (say, a 7 vs a 7.5) is about a genuine judgment call, not a guess.
+// Each entry anchors ONE vivid word to a 0.5 step on the 0–10 scale — short enough
+// to read at a glance while dragging the slider, distinct enough that picking
+// between neighbors (say, a 7 vs a 7.5) is a real judgment call, not a guess.
 const RATING_GUIDES = [
-  { value:0,   label:'Impossible to sit through' },
-  { value:0.5, label:'No redeeming qualities at all' },
-  { value:1,   label:'Fails on nearly every level' },
-  { value:1.5, label:'A genuinely painful listen' },
-  { value:2,   label:'Not for you, plain and simple' },
-  { value:2.5, label:'One bright spot, otherwise rough' },
-  { value:3,   label:'Weak from start to finish' },
-  { value:3.5, label:'Undermined by real problems' },
-  { value:4,   label:'Forgettable the moment it ends' },
-  { value:4.5, label:'Harmless, but nothing special' },
-  { value:5,   label:'Perfectly, purely average' },
-  { value:5.5, label:'A little more good than bad' },
-  { value:6,   label:'Solid enough while it plays' },
-  { value:6.5, label:'You\u2019d choose to hear it again' },
-  { value:7,   label:'A dependable, genuinely good track' },
-  { value:7.5, label:'Excellent, just short of great' },
-  { value:8,   label:'A track you\u2019d recommend to anyone' },
-  { value:8.5, label:'Outstanding, with only tiny nitpicks' },
-  { value:9,   label:'One of your favorite songs, period' },
-  { value:9.5, label:'Virtually perfect, nothing to critique' },
-  { value:10,  label:'Flawless \u2014 wouldn\u2019t change a note' },
+  { value:0,   label:'Unbearable' },
+  { value:0.5, label:'Dreadful' },
+  { value:1,   label:'Awful' },
+  { value:1.5, label:'Poor' },
+  { value:2,   label:'Bad' },
+  { value:2.5, label:'Weak' },
+  { value:3,   label:'Mediocre' },
+  { value:3.5, label:'Flawed' },
+  { value:4,   label:'Forgettable' },
+  { value:4.5, label:'Fine' },
+  { value:5,   label:'Average' },
+  { value:5.5, label:'Decent' },
+  { value:6,   label:'Solid' },
+  { value:6.5, label:'Good' },
+  { value:7,   label:'Great' },
+  { value:7.5, label:'Excellent' },
+  { value:8,   label:'Superb' },
+  { value:8.5, label:'Outstanding' },
+  { value:9,   label:'Exceptional' },
+  { value:9.5, label:'Sublime' },
+  { value:10,  label:'Flawless' },
 ];
 const TIER_MIN = 0, TIER_MAX = 10, TIER_STEP = 0.5;
 
@@ -2394,7 +2413,7 @@ function updateRatingGuide(score, elId) {
   if (!el) return;
   const s = Number(score);
   const g = getRatingGuide(s);
-  el.innerHTML = `<span class="guide-label">${g.label}</span>`;
+  el.innerHTML = `<span class="guide-label" style="color:${scoreColor(s)}">${g.label}</span>`;
 }
 
 // Build SVG ring HTML for a score
@@ -2485,7 +2504,76 @@ function nudgeSlider(delta) {
   onSliderInput(slider, 'sliderVal', 'rateSaveBtn');
 }
 
-// Initialize a slider to a given value without triggering save-btn logic
+// ── Community average: if other users have rated the exact same track, show
+// it as ambient context while you're picking your own score — a second,
+// social form of calibration alongside the personal one above.
+function communityStatsForTrack(spotifyId, excludeUsername) {
+  if (!spotifyId) return null;
+  const scores = [];
+  Object.entries(_communityRatingsCache).forEach(([uname, items]) => {
+    if (uname === excludeUsername) return;
+    items.forEach(it => { if (it.spotifyId === spotifyId) scores.push(it.score); });
+  });
+  if (!scores.length) return null;
+  return { avg: scores.reduce((a,b) => a+b, 0) / scores.length, count: scores.length };
+}
+
+function renderCommunityAvgLine(spotifyId) {
+  const line = document.getElementById('communityAvgLine');
+  if (!line) return;
+  const cs = communityStatsForTrack(spotifyId, getSession());
+  if (!cs) { line.style.display = 'none'; line.innerHTML = ''; return; }
+  line.style.display = 'flex';
+  line.innerHTML = `<span class="community-avg-badge" style="color:${scoreColor(cs.avg)};border-color:${scoreColor(cs.avg)}">${cs.avg.toFixed(1)}</span> community average from ${cs.count} other rating${cs.count!==1?'s':''}`;
+}
+
+// ── Milestones ────────────────────────────────────────────────
+// Purely client-side celebration — reads localStorage only, never touches the
+// DB, so it can't collide with the real ratings schema.
+const MILESTONE_COUNTS = [10, 25, 50, 100, 250, 500, 1000];
+const MILESTONE_MSGS = {
+  10:  'You\u2019re building a real library.',
+  25:  'Taste is starting to take shape.',
+  50:  'Halfway to a proper archive.',
+  100: 'Triple digits — certified music nerd.',
+  250: 'That\u2019s serious dedication.',
+  500: 'A genuinely serious collection.',
+  1000:'Absolute legend status.',
+};
+function _milestoneKey(username) { return 'reverie_milestones_v1_' + username; }
+function _getSeenMilestones(username) {
+  try { return JSON.parse(localStorage.getItem(_milestoneKey(username))) || []; } catch(e) { return []; }
+}
+function _markMilestoneSeen(username, m) {
+  const seen = _getSeenMilestones(username);
+  if (!seen.includes(m)) { seen.push(m); try { localStorage.setItem(_milestoneKey(username), JSON.stringify(seen)); } catch(e) {} }
+}
+function showMilestoneToast(title, sub) {
+  const pop = document.getElementById('milestonePop');
+  if (!pop) return;
+  document.getElementById('milestoneTitle').textContent = title;
+  document.getElementById('milestoneSub').textContent = sub;
+  pop.classList.add('show');
+  clearTimeout(window._milestoneTimer);
+  window._milestoneTimer = setTimeout(() => pop.classList.remove('show'), 3800);
+}
+function checkMilestones(username) {
+  if (!username) return;
+  const seen = _getSeenMilestones(username);
+  const count = ratings.length;
+  const hit = [...MILESTONE_COUNTS].reverse().find(m => count >= m && !seen.includes(m));
+  if (hit) {
+    _markMilestoneSeen(username, hit);
+    setTimeout(() => showMilestoneToast(`🏆 ${hit} songs rated`, MILESTONE_MSGS[hit] || 'Milestone unlocked.'), 500);
+    return;
+  }
+  if (!seen.includes('first10') && ratings.some(r => r.score === 10)) {
+    _markMilestoneSeen(username, 'first10');
+    setTimeout(() => showMilestoneToast('💯 First perfect 10', 'You just called something flawless. Make it count.'), 500);
+  }
+}
+
+
 function setSlider(sliderId, valId, value) {
   const slider = document.getElementById(sliderId);
   if (!slider) return;
@@ -2995,6 +3083,7 @@ function showFetchedCard(item) {
   document.getElementById('fetchedArtist').textContent = item.artist;
   document.getElementById('fetchedMeta').textContent = [item.year, item.album, item.durationFmt || (item.duration ? msToTime(item.duration) : '')].filter(Boolean).join('  ·  ');
   document.getElementById('fetchedLink').href = item.spotifyUrl;
+  renderCommunityAvgLine(item.spotifyId);
 
   const initVal = existing ? existing.score : 5;
   setSlider('ratingSlider', 'sliderVal', initVal);
@@ -3023,6 +3112,7 @@ function saveFetchedRating() {
   const isUpdate = idx >= 0;
   if (isUpdate) ratings[idx] = entry; else ratings.push(entry);
   saveRatings();
+  checkMilestones(getSession());
   const scoreKey = scoreToTier(score).key;
   const celebrate = score >= 8 ? ' 🎉' : score >= 5 ? ' ✓' : '';
   showToast(isUpdate ? `Rating updated to ${scoreKey}/10${celebrate}` : `"${currentFetched.title}" rated ${scoreKey}/10${celebrate}`);
@@ -4680,5 +4770,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="milestone-pop" id="milestonePop">
+  <div class="milestone-pop-title" id="milestoneTitle"></div>
+  <div class="milestone-pop-sub" id="milestoneSub"></div>
+</div>
 </body>
 </html>
