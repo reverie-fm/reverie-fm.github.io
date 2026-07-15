@@ -237,7 +237,7 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .btn-rate-save:hover{background:var(--accent);color:#1a1408;border-color:var(--accent)}
 .btn-rate-save:disabled{opacity:.3;cursor:not-allowed}
 .rating-guide{margin:.6rem 0 .75rem;min-height:1.6rem}
-.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:.01em;color:var(--accent2)}
+.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1.05rem;font-weight:600;letter-spacing:.01em;color:var(--muted)}
 
 /* ── Calibration ("is it really an X?") widget ── */
 .calibrate-box{margin:.2rem 0 1rem;padding:.85rem .9rem;background:var(--surface2);
@@ -1561,7 +1561,6 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
                 </div>
               </div>
             </div>
-            <div class="rating-guide" id="ratingGuide"></div>
             <div class="calibrate-box" id="calibrateBox">
               <div class="calibrate-label">⚖️ Sanity check — how does this compare?</div>
               <div id="calibrateRows"></div>
@@ -2453,8 +2452,7 @@ function onSliderInput(slider, valId, saveBtnId) {
     const btn = document.getElementById(saveBtnId);
     if (btn) btn.disabled = false;
   }
-  if (valId === 'sliderVal') { updateRatingGuide(v, 'ratingGuide'); renderCalibration(v, currentFetched ? currentFetched.id : null); }
-  if (valId === 'modalSliderVal') updateRatingGuide(v, 'modalRatingGuide');
+  if (valId === 'sliderVal') { renderCalibration(v, currentFetched ? currentFetched.id : null); }
 }
 
 // ── Calibration: surface a couple of already-rated songs near the current slider
@@ -2590,7 +2588,6 @@ function _trackInlineRatingHTML(ai, ti, score, saveOnclick) {
             id="ats-${ai}-${ti}" style="--fill-color:${col};--pct:${score/10*100}%"
             oninput="onAlbumTrackSlider(this,${ai},${ti})">
           <span class="album-track-inline-val" id="atsv-${ai}-${ti}" style="color:${col}">${fmt(score)}</span>
-          <span class="album-track-inline-guide" id="atsg-${ai}-${ti}">${getRatingGuide(score).label}</span>
           <button class="atsl-save-btn" onclick="${saveOnclick}">Save</button>
         </div>`;
 }
@@ -2603,8 +2600,6 @@ function onAlbumTrackSlider(input, ai, ti) {
   input.style.setProperty('--fill-color', col);
   const valEl = document.getElementById(`atsv-${ai}-${ti}`);
   if (valEl) { valEl.textContent = fmt(v); valEl.style.color = col; }
-  const guide = document.getElementById(`atsg-${ai}-${ti}`);
-  if (guide) { guide.textContent = getRatingGuide(v).label; }
 }
 
 let ratings = []; // loaded from Supabase after login
@@ -4762,7 +4757,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         </div>
       </div>
     </div>
-    <div class="rating-guide" id="modalRatingGuide"></div>
     <button class="modal-save-btn" onclick="saveModalRating()">Update Rating</button>
     <div class="modal-notes-label">Notes (optional)</div>
     <textarea class="modal-notes" id="modalNotes" placeholder="What do you love about this track?…" rows="2"></textarea>
