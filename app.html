@@ -236,9 +236,8 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   transition:all .15s;font-family:'DM Sans',sans-serif}
 .btn-rate-save:hover{background:var(--accent);color:#1a1408;border-color:var(--accent)}
 .btn-rate-save:disabled{opacity:.3;cursor:not-allowed}
-.rating-guide{margin:.6rem 0 .75rem;min-height:1.4rem}
-.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1rem;font-weight:600;letter-spacing:.01em}
-.rating-guide .guide-desc{display:block;font-family:'DM Sans',sans-serif;font-size:.78rem;color:var(--muted);margin-top:.15rem}
+.rating-guide{margin:.6rem 0 .75rem;min-height:1.3rem}
+.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:.95rem;font-weight:600;letter-spacing:.01em;color:var(--muted)}
 
 /* ── Stats ── */
 .stats-bar{display:flex;gap:1rem;margin-bottom:2rem;padding:1.1rem 1.5rem;
@@ -2288,27 +2287,27 @@ function animateCount(el, target, duration, isFloat) {
 // The goal is to give every value real meaning, so picking between neighbors
 // (say, a 7 vs a 7.5) is about a genuine judgment call, not a guess.
 const RATING_GUIDES = [
-  { value:0,   label:'Unbearable', desc:'Can\u2019t sit through it once.' },
-  { value:0.5, label:'Atrocious',  desc:'Nothing here works at all.' },
-  { value:1,   label:'Terrible',   desc:'Basically nothing to like.' },
-  { value:1.5, label:'Awful',      desc:'A genuinely rough listen.' },
-  { value:2,   label:'Bad',        desc:'Just isn\u2019t for you.' },
-  { value:2.5, label:'Weak',       desc:'A little redeems it, not much.' },
-  { value:3,   label:'Poor',       desc:'Mostly falls flat.' },
-  { value:3.5, label:'Flawed',     desc:'Held back by real problems.' },
-  { value:4,   label:'Mediocre',   desc:'Doesn\u2019t leave a mark.' },
-  { value:4.5, label:'Tolerable',  desc:'Passes the time, nothing more.' },
-  { value:5,   label:'Okay',       desc:'Straight down the middle.' },
-  { value:5.5, label:'Alright',    desc:'A shade better than average.' },
-  { value:6,   label:'Decent',     desc:'Enjoyable while it\u2019s on.' },
-  { value:6.5, label:'Solid',      desc:'You\u2019d happily hear it again.' },
-  { value:7,   label:'Good',       desc:'A song you\u2019d recommend.' },
-  { value:7.5, label:'Very Good',  desc:'Really strong, just shy of great.' },
-  { value:8,   label:'Great',      desc:'One of your go-tos.' },
-  { value:8.5, label:'Excellent',  desc:'Nearly perfect, tiny flaws only.' },
-  { value:9,   label:'Incredible', desc:'A best-of-the-year contender.' },
-  { value:9.5, label:'Masterful',  desc:'Almost nothing to fault.' },
-  { value:10,  label:'Perfect',    desc:'Couldn\u2019t ask for better. \u2728' },
+  { value:0,   label:'Can\u2019t sit through it' },
+  { value:0.5, label:'Almost nothing works' },
+  { value:1,   label:'Basically unlistenable' },
+  { value:1.5, label:'Rough all around' },
+  { value:2,   label:'Just not for you' },
+  { value:2.5, label:'Barely redeemable' },
+  { value:3,   label:'Mostly falls flat' },
+  { value:3.5, label:'Held back by flaws' },
+  { value:4,   label:'Doesn\u2019t leave a mark' },
+  { value:4.5, label:'Fine as background' },
+  { value:5,   label:'Right down the middle' },
+  { value:5.5, label:'A bit better than okay' },
+  { value:6,   label:'Enjoyable enough' },
+  { value:6.5, label:'Worth hearing again' },
+  { value:7,   label:'Genuinely good' },
+  { value:7.5, label:'Really strong' },
+  { value:8,   label:'One of your go-tos' },
+  { value:8.5, label:'Nearly perfect' },
+  { value:9,   label:'Best-of-the-year material' },
+  { value:9.5, label:'Almost flawless' },
+  { value:10,  label:'Couldn\u2019t ask for better' },
 ];
 const TIER_MIN = 0, TIER_MAX = 10, TIER_STEP = 0.5;
 
@@ -2350,7 +2349,7 @@ function getRatingGuide(score) {
 function scoreToTier(score) {
   const s = Number(score);
   const g = getRatingGuide(s);
-  return { key: fmt(s), value: s, color: scoreColor(s), label: g.label, desc: g.desc };
+  return { key: fmt(s), value: s, color: scoreColor(s), label: g.label };
 }
 
 function updateRatingGuide(score, elId) {
@@ -2358,7 +2357,7 @@ function updateRatingGuide(score, elId) {
   if (!el) return;
   const s = Number(score);
   const g = getRatingGuide(s);
-  el.innerHTML = `<span class="guide-label" style="color:${scoreColor(s)}">${fmt(s)} \u00b7 ${g.label}</span><span class="guide-desc">${g.desc}</span>`;
+  el.innerHTML = `<span class="guide-label">${g.label}</span>`;
 }
 
 // Build SVG ring HTML for a score
@@ -2419,7 +2418,7 @@ function _trackInlineRatingHTML(ai, ti, score, saveOnclick) {
             id="ats-${ai}-${ti}" style="--fill-color:${col};--pct:${score/10*100}%"
             oninput="onAlbumTrackSlider(this,${ai},${ti})">
           <span class="album-track-inline-val" id="atsv-${ai}-${ti}" style="color:${col}">${fmt(score)}</span>
-          <span class="album-track-inline-guide" id="atsg-${ai}-${ti}" style="color:${col}">${getRatingGuide(score).label}</span>
+          <span class="album-track-inline-guide" id="atsg-${ai}-${ti}">${getRatingGuide(score).label}</span>
           <button class="atsl-save-btn" onclick="${saveOnclick}">Save</button>
         </div>`;
 }
@@ -2433,7 +2432,7 @@ function onAlbumTrackSlider(input, ai, ti) {
   const valEl = document.getElementById(`atsv-${ai}-${ti}`);
   if (valEl) { valEl.textContent = fmt(v); valEl.style.color = col; }
   const guide = document.getElementById(`atsg-${ai}-${ti}`);
-  if (guide) { guide.textContent = getRatingGuide(v).label; guide.style.color = col; }
+  if (guide) { guide.textContent = getRatingGuide(v).label; }
 }
 
 let ratings = []; // loaded from Supabase after login
