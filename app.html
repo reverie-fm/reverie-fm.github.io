@@ -1565,7 +1565,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
             <div class="dual-joined-thumb" id="dualJoinedThumb"></div>
           </div>
           <div class="dual-range-tiers">
-            <span style="color:hsl(0,82%,58%)">0</span><span style="color:hsl(55,82%,58%)">2</span><span style="color:hsl(110,82%,58%)">4</span><span style="color:hsl(165,82%,58%)">6</span><span style="color:hsl(220,82%,58%)">8</span><span style="color:hsl(275,82%,58%)">10</span>
+            <span style="color:hsl(0,82%,58%)">0</span><span style="color:hsl(18,82%,58%)">2</span><span style="color:hsl(40,82%,58%)">4</span><span style="color:hsl(85,82%,58%)">6</span><span style="color:hsl(165,82%,58%)">8</span><span style="color:hsl(275,82%,58%)">10</span>
           </div>
           <div class="filter-panel-footer" style="margin-top:1.8rem">
             <span class="filter-count-badge" id="scoreFilterCount"></span>
@@ -2288,35 +2288,52 @@ function animateCount(el, target, duration, isFloat) {
 // The goal is to give every value real meaning, so picking between neighbors
 // (say, a 7 vs a 7.5) is about a genuine judgment call, not a guess.
 const RATING_GUIDES = [
-  { value:0,   label:'Unbearable', desc:'Physically painful. Turn it off.' },
-  { value:0.5, label:'Atrocious',  desc:'Barely a single bright spot.' },
-  { value:1,   label:'Terrible',   desc:'Bad in every way that matters.' },
-  { value:1.5, label:'Awful',      desc:'A rough, unrewarding listen.' },
-  { value:2,   label:'Bad',        desc:'Just doesn\u2019t work for you.' },
-  { value:2.5, label:'Weak',       desc:'One decent moment, that\u2019s it.' },
-  { value:3,   label:'Poor',       desc:'Below average, easy to forget.' },
-  { value:3.5, label:'Flawed',     desc:'Real issues hold it back.' },
-  { value:4,   label:'Mediocre',   desc:'Nothing here pulls you in.' },
-  { value:4.5, label:'Tolerable',  desc:'Fine as background, not a pick.' },
-  { value:5,   label:'Okay',       desc:'Perfectly average, nothing more.' },
-  { value:5.5, label:'Alright',    desc:'A step up from just okay.' },
-  { value:6,   label:'Decent',     desc:'Solid, but forgettable after.' },
-  { value:6.5, label:'Solid',      desc:'Dependable \u2014 you\u2019d play it again.' },
-  { value:7,   label:'Good',       desc:'You\u2019d genuinely recommend this.' },
-  { value:7.5, label:'Very Good',  desc:'Excellent, just short of great.' },
-  { value:8,   label:'Great',      desc:'A real favorite of yours.' },
-  { value:8.5, label:'Excellent',  desc:'Nearly perfect, tiny nitpicks only.' },
-  { value:9,   label:'Incredible', desc:'Among the best you\u2019ve heard all year.' },
-  { value:9.5, label:'Masterful',  desc:'Virtually flawless.' },
-  { value:10,  label:'Perfect',    desc:'Life-changing. No notes. \u2728' },
+  { value:0,   label:'Unbearable', desc:'Can\u2019t sit through it once.' },
+  { value:0.5, label:'Atrocious',  desc:'Nothing here works at all.' },
+  { value:1,   label:'Terrible',   desc:'Basically nothing to like.' },
+  { value:1.5, label:'Awful',      desc:'A genuinely rough listen.' },
+  { value:2,   label:'Bad',        desc:'Just isn\u2019t for you.' },
+  { value:2.5, label:'Weak',       desc:'A little redeems it, not much.' },
+  { value:3,   label:'Poor',       desc:'Mostly falls flat.' },
+  { value:3.5, label:'Flawed',     desc:'Held back by real problems.' },
+  { value:4,   label:'Mediocre',   desc:'Doesn\u2019t leave a mark.' },
+  { value:4.5, label:'Tolerable',  desc:'Passes the time, nothing more.' },
+  { value:5,   label:'Okay',       desc:'Straight down the middle.' },
+  { value:5.5, label:'Alright',    desc:'A shade better than average.' },
+  { value:6,   label:'Decent',     desc:'Enjoyable while it\u2019s on.' },
+  { value:6.5, label:'Solid',      desc:'You\u2019d happily hear it again.' },
+  { value:7,   label:'Good',       desc:'A song you\u2019d recommend.' },
+  { value:7.5, label:'Very Good',  desc:'Really strong, just shy of great.' },
+  { value:8,   label:'Great',      desc:'One of your go-tos.' },
+  { value:8.5, label:'Excellent',  desc:'Nearly perfect, tiny flaws only.' },
+  { value:9,   label:'Incredible', desc:'A best-of-the-year contender.' },
+  { value:9.5, label:'Masterful',  desc:'Almost nothing to fault.' },
+  { value:10,  label:'Perfect',    desc:'Couldn\u2019t ask for better. \u2728' },
 ];
 const TIER_MIN = 0, TIER_MAX = 10, TIER_STEP = 0.5;
 
-// A true rainbow across the full range — hue sweeps red → orange → yellow → green → blue → violet
-// as the score goes from 0 to 10, so it never "loops back" toward warm colors at the top end.
+// A true rainbow across the full range — hue sweeps red → orange → yellow → green → blue → violet.
+// The ramp isn't linear: low/mid scores move slowly through red-orange-yellow (so a 5 reads as
+// "yellow," not "green"), then accelerates through green/blue/violet for the top of the scale.
 function scoreColor(score) {
   const s = Math.max(0, Math.min(10, Number(score)));
-  const hue = (s / 10) * 275; // 0 = red, 275 = violet
+  const anchors = [
+    [0,   0],   // red
+    [2.5, 22],  // red-orange
+    [5,   52],  // yellow
+    [6,   85],  // yellow-green
+    [7,   120], // green
+    [8,   165], // teal
+    [9,   215], // blue
+    [10,  275], // violet
+  ];
+  let a = anchors[0], b = anchors[anchors.length - 1];
+  for (let i = 0; i < anchors.length - 1; i++) {
+    if (s >= anchors[i][0] && s <= anchors[i+1][0]) { a = anchors[i]; b = anchors[i+1]; break; }
+  }
+  const span = (b[0] - a[0]) || 1;
+  const t = (s - a[0]) / span;
+  const hue = a[1] + (b[1] - a[1]) * t;
   return `hsl(${hue}, 82%, 58%)`;
 }
 
