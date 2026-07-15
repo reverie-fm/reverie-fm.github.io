@@ -237,7 +237,7 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .btn-rate-save:hover{background:var(--accent);color:#1a1408;border-color:var(--accent)}
 .btn-rate-save:disabled{opacity:.3;cursor:not-allowed}
 .rating-guide{margin:.6rem 0 .75rem;min-height:1.6rem}
-.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:.01em;color:var(--muted);transition:color .12s}
+.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:.01em;color:var(--accent2)}
 
 /* ── Calibration ("is it really an X?") widget ── */
 .calibrate-box{margin:.2rem 0 1rem;padding:.85rem .9rem;background:var(--surface2);
@@ -2339,31 +2339,31 @@ function animateCount(el, target, duration, isFloat) {
 }
 
 // ── Tier rating system (S / A / B / C / D / E / F) ──────────────
-// Each entry anchors ONE vivid word to a 0.5 step on the 0–10 scale — short enough
+// Each entry anchors ONE everyday word to a 0.5 step on the 0–10 scale — short enough
 // to read at a glance while dragging the slider, distinct enough that picking
 // between neighbors (say, a 7 vs a 7.5) is a real judgment call, not a guess.
 const RATING_GUIDES = [
-  { value:0,   label:'Unbearable' },
-  { value:0.5, label:'Dreadful' },
-  { value:1,   label:'Awful' },
-  { value:1.5, label:'Poor' },
-  { value:2,   label:'Bad' },
-  { value:2.5, label:'Weak' },
-  { value:3,   label:'Mediocre' },
-  { value:3.5, label:'Flawed' },
-  { value:4,   label:'Forgettable' },
-  { value:4.5, label:'Fine' },
+  { value:0,   label:'Irredeemable' },
+  { value:0.5, label:'Unlistenable' },
+  { value:1,   label:'Abysmal' },
+  { value:1.5, label:'Terrible' },
+  { value:2,   label:'Awful' },
+  { value:2.5, label:'Lousy' },
+  { value:3,   label:'Bad' },
+  { value:3.5, label:'Poor' },
+  { value:4,   label:'Weak' },
+  { value:4.5, label:'Mediocre' },
   { value:5,   label:'Average' },
-  { value:5.5, label:'Decent' },
-  { value:6,   label:'Solid' },
-  { value:6.5, label:'Good' },
-  { value:7,   label:'Great' },
-  { value:7.5, label:'Excellent' },
-  { value:8,   label:'Superb' },
-  { value:8.5, label:'Outstanding' },
-  { value:9,   label:'Exceptional' },
-  { value:9.5, label:'Sublime' },
-  { value:10,  label:'Flawless' },
+  { value:5.5, label:'Fair' },
+  { value:6,   label:'Decent' },
+  { value:6.5, label:'Pleasant' },
+  { value:7,   label:'Good' },
+  { value:7.5, label:'Impressive' },
+  { value:8,   label:'Great' },
+  { value:8.5, label:'Fantastic' },
+  { value:9,   label:'Excellent' },
+  { value:9.5, label:'Exceptional' },
+  { value:10,  label:'Masterpiece' },
 ];
 const TIER_MIN = 0, TIER_MAX = 10, TIER_STEP = 0.5;
 
@@ -2413,7 +2413,7 @@ function updateRatingGuide(score, elId) {
   if (!el) return;
   const s = Number(score);
   const g = getRatingGuide(s);
-  el.innerHTML = `<span class="guide-label" style="color:${scoreColor(s)}">${g.label}</span>`;
+  el.innerHTML = `<span class="guide-label">${g.label}</span>`;
 }
 
 // Build SVG ring HTML for a score
