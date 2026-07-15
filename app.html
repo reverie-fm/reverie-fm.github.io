@@ -901,8 +901,8 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   animation:perfectPulse 3.8s ease-in-out infinite;
 }
 @keyframes perfectPulse{
-  0%,100%{filter:drop-shadow(0 0 2px rgba(255,207,63,.5)) drop-shadow(0 0 5px rgba(255,207,63,.2))}
-  50%{filter:drop-shadow(0 0 6px rgba(255,207,63,1)) drop-shadow(0 0 14px rgba(255,207,63,.55)) drop-shadow(0 0 24px rgba(255,207,63,.25))}
+  0%,100%{filter:drop-shadow(0 0 2px rgba(163,60,236,.5)) drop-shadow(0 0 5px rgba(163,60,236,.2))}
+  50%{filter:drop-shadow(0 0 6px rgba(163,60,236,1)) drop-shadow(0 0 14px rgba(163,60,236,.55)) drop-shadow(0 0 24px rgba(163,60,236,.25))}
 }
 
 /* ── Score ring draw-on ── */
@@ -1565,7 +1565,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
             <div class="dual-joined-thumb" id="dualJoinedThumb"></div>
           </div>
           <div class="dual-range-tiers">
-            <span style="color:#f2354a">0</span><span style="color:#f38539">2</span><span style="color:#f0c93f">4</span><span style="color:#c9d94a">6</span><span style="color:#5ccf62">8</span><span style="color:#ffcf3f">10</span>
+            <span style="color:hsl(0,82%,58%)">0</span><span style="color:hsl(55,82%,58%)">2</span><span style="color:hsl(110,82%,58%)">4</span><span style="color:hsl(165,82%,58%)">6</span><span style="color:hsl(220,82%,58%)">8</span><span style="color:hsl(275,82%,58%)">10</span>
           </div>
           <div class="filter-panel-footer" style="margin-top:1.8rem">
             <span class="filter-count-badge" id="scoreFilterCount"></span>
@@ -2236,8 +2236,8 @@ function renderUserProfile(el, username) {
         <div class="profile-stat"><div class="profile-stat-num">${s.count}</div><div class="profile-stat-label">Rated</div></div>
         <div class="profile-stat"><div class="profile-stat-num" style="color:${s.count ? scoreColor(avg) : ''}">${s.count ? avg.toFixed(1) : '—'}</div><div class="profile-stat-label">Average</div></div>
         <div class="profile-stat"><div class="profile-stat-num">${s.count ? median.toFixed(1) : '—'}</div><div class="profile-stat-label">Median</div></div>
-        <div class="profile-stat"><div class="profile-stat-num" style="color:#94d654">${bangers}</div><div class="profile-stat-label">9+ Bangers</div></div>
-        <div class="profile-stat"><div class="profile-stat-num" style="color:#ffcf3f">${tens}</div><div class="profile-stat-label">Perfect 10s</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" style="color:${scoreColor(9)}">${bangers}</div><div class="profile-stat-label">9+ Bangers</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" style="color:${scoreColor(10)}">${tens}</div><div class="profile-stat-label">Perfect 10s</div></div>
       </div>
     </div>
     ${top5.length ? `
@@ -2288,49 +2288,36 @@ function animateCount(el, target, duration, isFloat) {
 // The goal is to give every value real meaning, so picking between neighbors
 // (say, a 7 vs a 7.5) is about a genuine judgment call, not a guess.
 const RATING_GUIDES = [
-  { value:0,   label:'Unbearable', desc:'Physically hard to sit through. Never again.' },
-  { value:0.5, label:'Atrocious',  desc:'Almost nothing redeeming about it.' },
-  { value:1,   label:'Terrible',   desc:'Bad in nearly every way it could be.' },
-  { value:1.5, label:'Awful',      desc:'A rough listen with very little to like.' },
-  { value:2,   label:'Bad',        desc:'Doesn\u2019t work for you \u2014 an easy skip.' },
-  { value:2.5, label:'Weak',       desc:'A moment or two land, most of it doesn\u2019t.' },
-  { value:3,   label:'Poor',       desc:'Below average and pretty forgettable.' },
-  { value:3.5, label:'Flawed',     desc:'Real problems keep this one held back.' },
-  { value:4,   label:'Mediocre',   desc:'Passable, but nothing here pulls you in.' },
-  { value:4.5, label:'Tolerable',  desc:'Fine as background noise, not a seek-out.' },
-  { value:5,   label:'Okay',       desc:'A perfectly average song. Just okay.' },
-  { value:5.5, label:'Alright',    desc:'Decent \u2014 a bit more going for it than okay.' },
-  { value:6,   label:'Decent',     desc:'Solid enough to genuinely enjoy.' },
-  { value:6.5, label:'Solid',      desc:'Consistently good \u2014 a dependable listen.' },
-  { value:7,   label:'Good',       desc:'A genuinely good song you\u2019d recommend.' },
-  { value:7.5, label:'Very Good',  desc:'Excellent moments, just short of great.' },
-  { value:8,   label:'Great',      desc:'A favorite \u2014 you\u2019d happily put it on repeat.' },
-  { value:8.5, label:'Excellent',  desc:'Close to perfect, only minor nitpicks.' },
-  { value:9,   label:'Incredible', desc:'One of the best you\u2019ve heard all year.' },
-  { value:9.5, label:'Masterful',  desc:'Near-flawless. A genuine standout.' },
-  { value:10,  label:'Perfect',    desc:'Life-changing. No notes, ever. \u2728' },
+  { value:0,   label:'Unbearable', desc:'Physically painful. Turn it off.' },
+  { value:0.5, label:'Atrocious',  desc:'Barely a single bright spot.' },
+  { value:1,   label:'Terrible',   desc:'Bad in every way that matters.' },
+  { value:1.5, label:'Awful',      desc:'A rough, unrewarding listen.' },
+  { value:2,   label:'Bad',        desc:'Just doesn\u2019t work for you.' },
+  { value:2.5, label:'Weak',       desc:'One decent moment, that\u2019s it.' },
+  { value:3,   label:'Poor',       desc:'Below average, easy to forget.' },
+  { value:3.5, label:'Flawed',     desc:'Real issues hold it back.' },
+  { value:4,   label:'Mediocre',   desc:'Nothing here pulls you in.' },
+  { value:4.5, label:'Tolerable',  desc:'Fine as background, not a pick.' },
+  { value:5,   label:'Okay',       desc:'Perfectly average, nothing more.' },
+  { value:5.5, label:'Alright',    desc:'A step up from just okay.' },
+  { value:6,   label:'Decent',     desc:'Solid, but forgettable after.' },
+  { value:6.5, label:'Solid',      desc:'Dependable \u2014 you\u2019d play it again.' },
+  { value:7,   label:'Good',       desc:'You\u2019d genuinely recommend this.' },
+  { value:7.5, label:'Very Good',  desc:'Excellent, just short of great.' },
+  { value:8,   label:'Great',      desc:'A real favorite of yours.' },
+  { value:8.5, label:'Excellent',  desc:'Nearly perfect, tiny nitpicks only.' },
+  { value:9,   label:'Incredible', desc:'Among the best you\u2019ve heard all year.' },
+  { value:9.5, label:'Masterful',  desc:'Virtually flawless.' },
+  { value:10,  label:'Perfect',    desc:'Life-changing. No notes. \u2728' },
 ];
 const TIER_MIN = 0, TIER_MAX = 10, TIER_STEP = 0.5;
 
-// Smooth, vivid color across the full 0–10 range (red \u2192 yellow \u2192 green \u2192 gold at the very top)
+// A true rainbow across the full range — hue sweeps red → orange → yellow → green → blue → violet
+// as the score goes from 0 to 10, so it never "loops back" toward warm colors at the top end.
 function scoreColor(score) {
   const s = Math.max(0, Math.min(10, Number(score)));
-  const stops = [
-    [0,   242, 53,  74],  // red
-    [5,   240, 201, 63],  // yellow
-    [9,   51,  192, 132], // green
-    [10,  255, 207, 63],  // gold (near-perfect / perfect)
-  ];
-  let a = stops[0], b = stops[1];
-  for (let i = 0; i < stops.length - 1; i++) {
-    if (s >= stops[i][0] && s <= stops[i+1][0]) { a = stops[i]; b = stops[i+1]; break; }
-  }
-  const span = (b[0] - a[0]) || 1;
-  const t = (s - a[0]) / span;
-  const r = Math.round(a[1] + (b[1]-a[1])*t);
-  const g = Math.round(a[2] + (b[2]-a[2])*t);
-  const bl = Math.round(a[3] + (b[3]-a[3])*t);
-  return `rgb(${r},${g},${bl})`;
+  const hue = (s / 10) * 275; // 0 = red, 275 = violet
+  return `hsl(${hue}, 82%, 58%)`;
 }
 
 // Nearest descriptive guide entry for a given (possibly non-anchored) score
@@ -3320,8 +3307,8 @@ function renderRankings() {
   statsBar.innerHTML = `
     <div class="stat"><div class="stat-num" id="sbn-rated">0</div><div class="stat-label">Rated</div></div>
     <div class="stat"><div class="stat-num" id="sbn-avg" style="color:${scoreColor(avgVal)}">0</div><div class="stat-label">Avg Score</div></div>
-    <div class="stat"><div class="stat-num" id="sbn-bangers" style="color:#94d654">0</div><div class="stat-label">9+ Bangers</div></div>
-    <div class="stat"><div class="stat-num" id="sbn-perfect" style="color:#ffcf3f">0</div><div class="stat-label">Perfect 10s</div></div>
+    <div class="stat"><div class="stat-num" id="sbn-bangers" style="color:${scoreColor(9)}">0</div><div class="stat-label">9+ Bangers</div></div>
+    <div class="stat"><div class="stat-num" id="sbn-perfect" style="color:${scoreColor(10)}">0</div><div class="stat-label">Perfect 10s</div></div>
   `;
 
   // staggered count-ups
