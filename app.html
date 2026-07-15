@@ -2948,18 +2948,6 @@ function saveFetchedRating() {
   });
 }
 
-// getRatingGuide returns the tier object itself — .label and .color match the
-// shape older code expects, plus .key and .desc for the fuller tier description.
-function getRatingGuide(score) {
-  return scoreToTier(score);
-}
-
-function updateRatingGuide(score, elId) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  const t = scoreToTier(score);
-  el.innerHTML = `<span class="guide-label" style="color:${t.color}">${t.key} · ${t.label}</span><span class="guide-desc">${t.desc}</span>`;
-}
 function switchTab(t) {
   ['explore','rankings','albums','stats','community'].forEach(id => {
     const btn = document.getElementById('tab-btn-'+id);
