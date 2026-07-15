@@ -445,6 +445,10 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .modal-close{position:absolute;top:.9rem;right:.9rem;background:none;border:1px solid var(--border);
   color:var(--muted);font-size:1rem;cursor:pointer;border-radius:6px;padding:.28rem .55rem;transition:all .15s}
 .modal-close:hover{color:var(--text);border-color:var(--muted)}
+.modal-share-btn{position:absolute;top:.9rem;right:2.9rem;background:none;border:1px solid var(--border);
+  color:var(--muted);font-size:.68rem;font-family:'DM Sans',sans-serif;cursor:pointer;border-radius:6px;
+  padding:.28rem .6rem;transition:all .15s}
+.modal-share-btn:hover{color:var(--accent2);border-color:var(--border2)}
 .modal-art-row{display:flex;gap:1rem;align-items:flex-start;margin-bottom:1.25rem}
 .modal-art-img{width:64px;height:64px;border-radius:8px;object-fit:cover;flex-shrink:0}
 .modal-art-emoji{width:64px;height:64px;border-radius:8px;background:var(--surface2);
@@ -1000,8 +1004,13 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   border:1px solid rgba(255,255,255,.15);border-radius:10px;
   padding:.7rem 1.25rem;font-size:.82rem;color:var(--text);z-index:500;opacity:0;
   transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;
-  box-shadow:0 8px 32px rgba(0,0,0,.55);backdrop-filter:blur(16px)}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  box-shadow:0 8px 32px rgba(0,0,0,.55);backdrop-filter:blur(16px);
+  display:flex;align-items:center;gap:.85rem;justify-content:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast-undo{background:none;border:1px solid var(--border2);color:var(--accent2);border-radius:6px;
+  padding:.25rem .6rem;font-size:.72rem;font-family:'DM Sans',sans-serif;cursor:pointer;
+  flex-shrink:0;transition:all .15s}
+.toast-undo:hover{background:rgba(200,169,110,.14);border-color:var(--accent)}
 
 /* ── Milestone celebration popup ── */
 .milestone-pop{position:fixed;top:5.5rem;left:50%;transform:translateX(-50%) translateY(-14px) scale(.96);
@@ -1973,9 +1982,10 @@ function initApp(username) {
   // without forcing them through the Community tab first.
   _fetchAllRatings().catch(() => {});
 
-  // Patch deleteRating to also remove from Supabase
+  // Patch deleteRating to also remove from Supabase (with a quick undo option)
   const _origDelete = window.deleteRating;
   window.deleteRating = async function(id) {
+    const removedItem = ratings.find(r => r.id === id);
     if (_currentUserId) {
       await _sb.from('ratings').delete().eq('user_id', _currentUserId).eq('spotify_id', id);
     }
@@ -1983,7 +1993,18 @@ function initApp(username) {
     renderRankings();
     renderAlbums();
     renderStats();
-    showToast('Rating removed');
+    showToast(removedItem ? `"${removedItem.title}" removed` : 'Rating removed',
+      removedItem ? {
+        label: 'Undo',
+        onClick: async () => {
+          ratings.push(removedItem);
+          await saveRatings();
+          renderRankings();
+          renderAlbums();
+          renderStats();
+          showToast(`"${removedItem.title}" restored`);
+        }
+      } : null);
   };
 
   // Spotify uses shared/hardcoded credentials for all users
@@ -4433,6 +4454,19 @@ function openEditModal(item) {
   document.getElementById('modalOverlay').classList.add('open');
 }
 
+async function shareModalRating() {
+  if (!editItem) return;
+  const slider = document.getElementById('modalRatingSlider');
+  const score = slider ? parseFloat(slider.value) : editItem.score;
+  const text = `🎵 ${editItem.title} — ${editItem.artist}: ${fmt(score)}/10 on Reverie`;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Copied to clipboard');
+  } catch (e) {
+    showToast('Couldn\'t copy — try selecting the text manually');
+  }
+}
+
 function saveModalRating() {
   if (!editItem) return;
   const score = parseFloat(document.getElementById('modalRatingSlider').value);
@@ -4491,6 +4525,25 @@ document.addEventListener('keydown', e => {
       if (saveBtn && !saveBtn.disabled) { e.preventDefault(); saveFetchedRating(); }
     }
   }
+
+  // Same quick-rate shortcuts, but for the edit-rating modal
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalOpen = modalOverlay && modalOverlay.classList.contains('open');
+  if (modalOpen && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    const slider = document.getElementById('modalRatingSlider');
+    if (/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+      if (slider) { slider.value = e.key; onSliderInput(slider, 'modalSliderVal', null); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (slider) { slider.value = Math.min(10, parseFloat(slider.value) + 0.5); onSliderInput(slider, 'modalSliderVal', null); }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (slider) { slider.value = Math.max(0, parseFloat(slider.value) - 0.5); onSliderInput(slider, 'modalSliderVal', null); }
+    } else if (e.key === 'Enter') {
+      e.preventDefault(); saveModalRating();
+    }
+  }
 });
 
 function deleteRating(id) {
@@ -4530,11 +4583,22 @@ function msToTime(ms) {
 }
 
 let toastTimer;
-function showToast(msg) {
+function showToast(msg, action) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
+  t.innerHTML = '';
+  const label = document.createElement('span');
+  label.textContent = msg;
+  t.appendChild(label);
+  if (action && action.label && typeof action.onClick === 'function') {
+    const btn = document.createElement('button');
+    btn.className = 'toast-undo';
+    btn.textContent = action.label;
+    btn.onclick = () => { t.classList.remove('show'); clearTimeout(toastTimer); action.onClick(); };
+    t.appendChild(btn);
+  }
+  t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  toastTimer = setTimeout(() => t.classList.remove('show'), action ? 5000 : 3000);
 }
 
 
@@ -4732,6 +4796,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">✕</button>
+    <button class="modal-share-btn" id="modalShareBtn" onclick="shareModalRating()" title="Copy rating as text">⇪ Share</button>
     <div class="modal-art-row">
       <img class="modal-art-img" id="modalArtImg" src="" alt=""
         onerror="this.style.display='none';document.getElementById('modalArtFallback').style.display='flex'">
