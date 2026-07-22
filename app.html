@@ -1598,7 +1598,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
             <div class="dual-joined-thumb" id="dualJoinedThumb"></div>
           </div>
           <div class="dual-range-tiers">
-            <span style="color:hsl(0,78%,50%)">0</span><span style="color:hsl(20,78%,51.6%)">2</span><span style="color:hsl(35.2,78%,48.4%)">4</span><span style="color:hsl(63.5,78%,47%)">6</span><span style="color:hsl(98.3,78%,47.3%)">8</span><span style="color:hsl(125,78%,46%)">10</span>
+            <span style="color:hsl(0.0,70%,50.0%)">0</span><span style="color:hsl(25.0,70%,46.5%)">2</span><span style="color:hsl(50.0,70%,44.3%)">4</span><span style="color:hsl(75.0,70%,44.3%)">6</span><span style="color:hsl(100.0,70%,46.5%)">8</span><span style="color:hsl(125.0,70%,50.0%)">10</span>
           </div>
           <div class="filter-panel-footer" style="margin-top:1.8rem">
             <span class="filter-count-badge" id="scoreFilterCount"></span>
@@ -2367,27 +2367,17 @@ const TIER_MIN = 0, TIER_MAX = 10, TIER_STEP = 0.5;
 // "yellow," not "green"), then accelerates through green/blue/violet for the top of the scale.
 function scoreColor(score) {
   const s = Math.max(0, Math.min(10, Number(score)));
-  // Red → green ramp: matches how people already read ratings (report cards,
-  // Rotten Tomatoes, etc.), instead of cycling through a full rainbow where a
-  // 9 (blue) and an 8 (teal) don't read as "better/worse" at a glance.
-  // Lightness dips slightly through the amber midpoint since pure yellow is
-  // the lowest-contrast hue on a dark background.
-  const anchors = [
-    [0,   0,   50], // red
-    [2.5, 25,  52], // orange
-    [5,   42,  46], // amber
-    [7,   85,  48], // yellow-green
-    [10,  125, 46], // green
-  ];
-  let a = anchors[0], b = anchors[anchors.length - 1];
-  for (let i = 0; i < anchors.length - 1; i++) {
-    if (s >= anchors[i][0] && s <= anchors[i+1][0]) { a = anchors[i]; b = anchors[i+1]; break; }
-  }
-  const span = (b[0] - a[0]) || 1;
-  const t = (s - a[0]) / span;
-  const hue = a[1] + (b[1] - a[1]) * t;
-  const light = a[2] + (b[2] - a[2]) * t;
-  return `hsl(${hue}, 78%, ${light}%)`;
+  // Single smooth red → green ramp, evenly paced across the whole 0–10 range
+  // (no per-segment anchors) so each half-point step reads as a consistent
+  // amount of color change instead of lingering in muddy orange around 3–5
+  // and then rushing through yellow-green around 5–7.
+  const t = s / 10;
+  const hue = t * 125;                 // 0 = red … 125 = green
+  const sat = 70;                      // keep it clean, not neon
+  const light = 50 - Math.sin(t * Math.PI) * 6; // gentle dip only right at
+  // the yellow midpoint (~s=5), where lightness needs to drop a bit for
+  // contrast — everywhere else stays close to a consistent 50%.
+  return `hsl(${hue.toFixed(1)}, ${sat}%, ${light.toFixed(1)}%)`;
 }
 
 // Nearest descriptive guide entry for a given (possibly non-anchored) score
