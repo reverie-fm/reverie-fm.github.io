@@ -1598,7 +1598,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
             <div class="dual-joined-thumb" id="dualJoinedThumb"></div>
           </div>
           <div class="dual-range-tiers">
-            <span style="color:hsl(0.0,70%,50.0%)">0</span><span style="color:hsl(25.0,70%,46.5%)">2</span><span style="color:hsl(50.0,70%,44.3%)">4</span><span style="color:hsl(75.0,70%,44.3%)">6</span><span style="color:hsl(100.0,70%,46.5%)">8</span><span style="color:hsl(125.0,70%,50.0%)">10</span>
+            <span style="color:hsl(0.0,85%,55%)">0</span><span style="color:hsl(24.0,85%,55%)">2</span><span style="color:hsl(48.0,85%,55%)">4</span><span style="color:hsl(72.0,85%,55%)">6</span><span style="color:hsl(96.0,85%,55%)">8</span><span style="color:hsl(120.0,85%,55%)">10</span>
           </div>
           <div class="filter-panel-footer" style="margin-top:1.8rem">
             <span class="filter-count-badge" id="scoreFilterCount"></span>
@@ -2367,17 +2367,11 @@ const TIER_MIN = 0, TIER_MAX = 10, TIER_STEP = 0.5;
 // "yellow," not "green"), then accelerates through green/blue/violet for the top of the scale.
 function scoreColor(score) {
   const s = Math.max(0, Math.min(10, Number(score)));
-  // Single smooth red → green ramp, evenly paced across the whole 0–10 range
-  // (no per-segment anchors) so each half-point step reads as a consistent
-  // amount of color change instead of lingering in muddy orange around 3–5
-  // and then rushing through yellow-green around 5–7.
-  const t = s / 10;
-  const hue = t * 125;                 // 0 = red … 125 = green
-  const sat = 70;                      // keep it clean, not neon
-  const light = 50 - Math.sin(t * Math.PI) * 6; // gentle dip only right at
-  // the yellow midpoint (~s=5), where lightness needs to drop a bit for
-  // contrast — everywhere else stays close to a consistent 50%.
-  return `hsl(${hue.toFixed(1)}, ${sat}%, ${light.toFixed(1)}%)`;
+  // Straight, punchy red → green ramp: constant saturation and lightness,
+  // hue moves evenly from 0 (red) to 120 (green). No dips or muted spots —
+  // just a clean, vivid gradient the same way a heatmap or signal light reads.
+  const hue = (s / 10) * 120;
+  return `hsl(${hue.toFixed(1)}, 85%, 55%)`;
 }
 
 // Nearest descriptive guide entry for a given (possibly non-anchored) score
