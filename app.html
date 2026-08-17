@@ -237,6 +237,9 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .btn-rate-save:hover{background:var(--accent);color:#1a1408;border-color:var(--accent)}
 .btn-rate-save:disabled{opacity:.3;cursor:not-allowed}
 
+.rating-guide{margin:.6rem 0 .1rem;min-height:1.6rem}
+.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1.05rem;font-weight:600;letter-spacing:.01em;color:var(--muted)}
+
 
 /* ── Rating-health banner (stats tab) ── */
 .rating-health{margin:0 0 1.6rem;padding:.9rem 1.1rem;border-radius:11px;
@@ -1542,6 +1545,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
                 </div>
               </div>
             </div>
+            <div class="rating-guide" id="fetchRatingGuide"></div>
             <button class="btn-rate-save" id="rateSaveBtn" onclick="saveFetchedRating()" disabled>Save Rating</button>
             <div class="modal-notes-label" style="margin-top:.6rem">Notes (optional)</div>
             <textarea class="modal-notes" id="fetchNotes" placeholder="What do you love about this track?…" rows="2"></textarea>
@@ -2331,26 +2335,16 @@ function animateCount(el, target, duration, isFloat) {
 // to read at a glance while dragging the slider, distinct enough that picking
 // between neighbors (say, a 7 vs a 7.5) is a real judgment call, not a guess.
 const RATING_GUIDES = [
-  { value:0,   label:'Unbearable' },
-  { value:0.5, label:'Painful' },
+  { value:0,   label:'Unlistenable' },
   { value:1,   label:'Terrible' },
-  { value:1.5, label:'Awful' },
-  { value:2,   label:'Bad' },
-  { value:2.5, label:'Rough' },
-  { value:3,   label:'Weak' },
-  { value:3.5, label:'Underwhelming' },
-  { value:4,   label:'Mediocre' },
-  { value:4.5, label:'Okay' },
-  { value:5,   label:'Fine' },
-  { value:5.5, label:'Decent' },
-  { value:6,   label:'Good' },
-  { value:6.5, label:'Solid' },
-  { value:7,   label:'Great' },
-  { value:7.5, label:'Awesome' },
-  { value:8,   label:'Amazing' },
-  { value:8.5, label:'Incredible' },
-  { value:9,   label:'Phenomenal' },
-  { value:9.5, label:'Masterful' },
+  { value:2,   label:'Very Bad' },
+  { value:3,   label:'Bad' },
+  { value:4,   label:'Subpar' },
+  { value:5,   label:'Average' },
+  { value:6,   label:'Decent' },
+  { value:7,   label:'Good' },
+  { value:8,   label:'Great' },
+  { value:9,   label:'Masterful' },
   { value:10,  label:'Perfect' },
 ];
 const TIER_MIN = 0, TIER_MAX = 10, TIER_STEP = 0.5;
@@ -2372,20 +2366,28 @@ function scoreColor(score) {
   return `hsl(${hue.toFixed(1)}, ${sat.toFixed(1)}%, ${light.toFixed(1)}%)`;
 }
 
-// Nearest descriptive guide entry for a given (possibly non-anchored) score
+// Descriptive guide entry for a given score. A .5 score shares its base
+// integer's word (e.g. 9 and 9.5 are both "Masterful") — the label always
+// comes from the whole number at or below the score, capped at 10.
 function getRatingGuide(score) {
   const s = Number(score);
-  let best = RATING_GUIDES[10], bestDiff = Infinity;
-  for (const g of RATING_GUIDES) { const d = Math.abs(g.value - s); if (d < bestDiff) { bestDiff = d; best = g; } }
-  return best;
+  const base = Math.min(10, Math.max(0, Math.floor(s)));
+  return RATING_GUIDES[base];
 }
 
 // Back-compat shim: lots of the app calls scoreToTier(x).key/.color/.label/.desc —
-// key/color reflect the EXACT score, label/desc come from the nearest guide entry.
+// key/color reflect the EXACT score, label/desc come from the floor'd guide entry.
 function scoreToTier(score) {
   const s = Number(score);
   const g = getRatingGuide(s);
   return { key: fmt(s), value: s, color: scoreColor(s), label: g.label };
+}
+
+function updateRatingGuide(score, elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const g = getRatingGuide(score);
+  el.innerHTML = `<span class="guide-label">${g.label}</span>`;
 }
 
 
@@ -2414,7 +2416,7 @@ function ringHTML(score) {
 }
 
 // Slider fill + big number, driven off the current value
-function onSliderInput(slider, valId, saveBtnId) {
+function onSliderInput(slider, valId, saveBtnId, guideId) {
   const v = parseFloat(slider.value);
   const col = scoreColor(v);
   slider.style.setProperty('--pct', (v / 10 * 100) + '%');
@@ -2426,6 +2428,7 @@ function onSliderInput(slider, valId, saveBtnId) {
     const btn = document.getElementById(saveBtnId);
     if (btn) btn.disabled = false;
   }
+  updateRatingGuide(v, guideId || (valId === 'modalSliderVal' ? 'modalRatingGuide' : 'fetchRatingGuide'));
 }
 
 // Nudge the active rating slider by ±delta, clamped to 0–10, and re-run all the
@@ -4713,6 +4716,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         </div>
       </div>
     </div>
+    <div class="rating-guide" id="modalRatingGuide"></div>
     <button class="modal-save-btn" onclick="saveModalRating()">Update Rating</button>
     <div class="modal-notes-label">Notes (optional)</div>
     <textarea class="modal-notes" id="modalNotes" placeholder="What do you love about this track?…" rows="2"></textarea>
