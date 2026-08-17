@@ -239,6 +239,42 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .rating-guide{margin:.6rem 0 .75rem;min-height:1.6rem}
 .rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1.05rem;font-weight:600;letter-spacing:.01em;color:var(--muted)}
 
+/* ── Compare-to-place: feel-first rating helper ── */
+.compare-toggle{background:none;border:none;padding:0;margin:.35rem 0 .1rem;font-family:'DM Mono',monospace;
+  font-size:.68rem;letter-spacing:.02em;color:var(--accent2);opacity:.8;cursor:pointer;text-decoration:underline;
+  text-underline-offset:2px}
+.compare-toggle:hover{opacity:1}
+.compare-panel{display:none;margin-top:.7rem;padding:.9rem 1rem;border:1px solid var(--border2);border-radius:12px;
+  background:var(--surface3)}
+.compare-panel.open{display:block}
+.compare-panel-title{font-family:'Fredoka',sans-serif;font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:.6rem}
+.compare-panel-sub{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted);margin:-.35rem 0 .7rem;line-height:1.5}
+.compare-feel-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.compare-feel-btn{padding:.55rem .6rem;border-radius:9px;border:1px solid var(--border2);background:var(--surface2);
+  font-family:'Fredoka',sans-serif;font-size:.82rem;font-weight:600;color:var(--text);cursor:pointer;
+  transition:border-color .15s,background .15s;text-align:left}
+.compare-feel-btn:hover{border-color:var(--accent);background:var(--surface3)}
+.compare-feel-btn .cfb-emoji{margin-right:.4rem}
+.compare-card{display:flex;align-items:center;gap:.7rem;padding:.6rem;border-radius:10px;background:var(--surface2);
+  border:1px solid var(--border)}
+.compare-card img{width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0}
+.compare-card-info{min-width:0;flex:1}
+.compare-card-title{font-size:.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compare-card-artist{font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compare-card-score{font-family:'Fredoka',sans-serif;font-weight:700;font-size:.95rem;flex-shrink:0}
+.compare-prompt{font-family:'DM Mono',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);margin:.65rem 0 .5rem}
+.compare-btn-row{display:flex;gap:.5rem}
+.compare-btn{flex:1;padding:.55rem .4rem;border-radius:9px;border:1px solid var(--border2);background:var(--surface2);
+  font-family:'Fredoka',sans-serif;font-size:.78rem;font-weight:600;color:var(--text);cursor:pointer;
+  transition:border-color .15s,background .15s,color .15s}
+.compare-btn:hover{border-color:var(--accent);color:var(--accent)}
+.compare-btn.compare-tie{color:var(--muted)}
+.compare-panel-footer{display:flex;justify-content:space-between;align-items:center;margin-top:.75rem}
+.compare-cancel-btn{background:none;border:none;padding:0;font-family:'DM Mono',monospace;font-size:.62rem;
+  color:var(--muted);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.compare-result{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);line-height:1.5}
+
 /* ── Rating-health banner (stats tab) ── */
 .rating-health{margin:0 0 1.6rem;padding:.9rem 1.1rem;border-radius:11px;
   border:1px solid var(--border2);background:linear-gradient(160deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,.015) 100%);
@@ -1549,6 +1585,8 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
                 </div>
               </div>
             </div>
+            <button class="compare-toggle" id="fetchCompareToggle" onclick="toggleComparePanel('fetch')">Not sure? Rate it by comparing →</button>
+            <div class="compare-panel" id="fetchComparePanel"></div>
             <button class="btn-rate-save" id="rateSaveBtn" onclick="saveFetchedRating()" disabled>Save Rating</button>
             <div class="modal-notes-label" style="margin-top:.6rem">Notes (optional)</div>
             <textarea class="modal-notes" id="fetchNotes" placeholder="What do you love about this track?…" rows="2"></textarea>
@@ -2453,6 +2491,155 @@ function nudgeSlider(delta) {
   onSliderInput(slider, 'sliderVal', 'rateSaveBtn');
 }
 
+// ── Compare-to-place: feel-first rating helper ──────────────────────────
+// Problem: staring at a bare 0–10 slider and picking an exact number is
+// hard to do "true to feeling." People are much better at relative calls
+// ("better than that other song" / "worse than that one") than absolute
+// ones. So: pick a rough feeling bucket, then binary-search against songs
+// you've already rated until we land on a precise, felt-right score.
+const COMPARE_BUCKETS = [
+  { emoji: '🤩', label: 'Loved it',    lo: 8,   hi: 10   },
+  { emoji: '🙂', label: 'Liked it',    lo: 6,   hi: 7.5  },
+  { emoji: '😐', label: 'It was okay', lo: 4,   hi: 5.5  },
+  { emoji: '👎', label: 'Not for me',  lo: 0,   hi: 3.5  },
+];
+
+const COMPARE_TARGETS = {
+  fetch: { sliderId: 'ratingSlider', valId: 'sliderVal', saveBtnId: 'rateSaveBtn',
+           panelId: 'fetchComparePanel', toggleId: 'fetchCompareToggle', getItem: () => currentFetched },
+  modal: { sliderId: 'modalRatingSlider', valId: 'modalSliderVal', saveBtnId: null,
+           panelId: 'modalComparePanel', toggleId: 'modalCompareToggle', getItem: () => editItem },
+};
+
+let _compareState = {}; // keyed by 'fetch' | 'modal'
+
+function toggleComparePanel(key) {
+  const t = COMPARE_TARGETS[key];
+  const panel = document.getElementById(t.panelId);
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) { cancelCompare(key); return; }
+  document.getElementById(t.toggleId).style.display = 'none';
+  panel.classList.add('open');
+  panel.innerHTML = `
+    <div class="compare-panel-title">How did it feel?</div>
+    <div class="compare-panel-sub">Pick the closest vibe — we'll narrow it down by comparing it to songs you've already rated.</div>
+    <div class="compare-feel-grid">
+      ${COMPARE_BUCKETS.map((b, i) => `<button class="compare-feel-btn" onclick="startCompareBucket('${key}',${i})"><span class="cfb-emoji">${b.emoji}</span>${b.label}</button>`).join('')}
+    </div>
+    <div class="compare-panel-footer">
+      <span></span>
+      <button class="compare-cancel-btn" onclick="cancelCompare('${key}')">Cancel</button>
+    </div>`;
+}
+
+function cancelCompare(key) {
+  const t = COMPARE_TARGETS[key];
+  document.getElementById(t.panelId).classList.remove('open');
+  document.getElementById(t.panelId).innerHTML = '';
+  document.getElementById(t.toggleId).style.display = '';
+  delete _compareState[key];
+}
+
+function startCompareBucket(key, bucketIdx) {
+  const t = COMPARE_TARGETS[key];
+  const bucket = COMPARE_BUCKETS[bucketIdx];
+  const item = t.getItem();
+  const pool = ratings
+    .filter(r => typeof r.score === 'number' && (!item || r.id !== item.id))
+    .sort((a, b) => a.score - b.score);
+
+  // Not enough of your own ratings in this feeling range yet to compare
+  // against — just seed the slider at the bucket midpoint so there's still
+  // a sane starting point, and let them fine-tune manually.
+  const inBucket = pool.filter(r => r.score >= bucket.lo && r.score <= bucket.hi);
+  if (inBucket.length < 2) {
+    const mid = Math.round(((bucket.lo + bucket.hi) / 2) * 2) / 2;
+    setSlider(t.sliderId, t.valId, mid);
+    if (t.saveBtnId) document.getElementById(t.saveBtnId).disabled = false;
+    const panel = document.getElementById(t.panelId);
+    panel.innerHTML = `<div class="compare-result">Not enough "${bucket.label}" songs rated yet to compare against — started you at ${fmt(mid)}/10. Nudge the slider above to match the feeling.</div>
+      <div class="compare-panel-footer"><span></span><button class="compare-cancel-btn" onclick="cancelCompare('${key}')">Done</button></div>`;
+    return;
+  }
+
+  _compareState[key] = { pool, lo: 0, hi: pool.length, bucket, rounds: 0 };
+  // Narrow the binary search's starting window to roughly this bucket's
+  // score range so the first comparison is already in the right neighborhood.
+  let lo = pool.findIndex(r => r.score >= bucket.lo);
+  if (lo === -1) lo = 0;
+  let hi = pool.length;
+  for (let i = pool.length - 1; i >= 0; i--) { if (pool[i].score > bucket.hi) hi = i; else break; }
+  _compareState[key].lo = lo;
+  _compareState[key].hi = hi;
+  renderCompareStep(key);
+}
+
+function renderCompareStep(key) {
+  const st = _compareState[key];
+  const t = COMPARE_TARGETS[key];
+  const panel = document.getElementById(t.panelId);
+  if (!st || st.lo >= st.hi || st.rounds >= 7) { finishCompare(key); return; }
+  const mid = (st.lo + st.hi) >> 1;
+  const ref = st.pool[mid];
+  panel.innerHTML = `
+    <div class="compare-panel-title">${st.bucket.emoji} Compared to this one?</div>
+    <div class="compare-card">
+      <img src="${esc(ref.imageUrl || '')}" alt="" onerror="this.style.display='none'">
+      <div class="compare-card-info">
+        <div class="compare-card-title">${esc(ref.title)}</div>
+        <div class="compare-card-artist">${esc(ref.artist)}</div>
+      </div>
+      <div class="compare-card-score" style="color:${scoreColor(ref.score)}">${scoreToTier(ref.score).key}</div>
+    </div>
+    <div class="compare-prompt">How does the new one feel next to this?</div>
+    <div class="compare-btn-row">
+      <button class="compare-btn" onclick="answerCompare('${key}','worse')">Worse</button>
+      <button class="compare-btn compare-tie" onclick="answerCompare('${key}','same')">About the same</button>
+      <button class="compare-btn" onclick="answerCompare('${key}','better')">Better</button>
+    </div>
+    <div class="compare-panel-footer">
+      <span></span>
+      <button class="compare-cancel-btn" onclick="cancelCompare('${key}')">Cancel</button>
+    </div>`;
+}
+
+function answerCompare(key, verdict) {
+  const st = _compareState[key];
+  if (!st) return;
+  const mid = (st.lo + st.hi) >> 1;
+  if (verdict === 'same') {
+    setSlider(COMPARE_TARGETS[key].sliderId, COMPARE_TARGETS[key].valId, st.pool[mid].score);
+    finishCompare(key, true);
+    return;
+  }
+  if (verdict === 'better') st.hi = mid; else st.lo = mid + 1;
+  st.rounds++;
+  renderCompareStep(key);
+}
+
+function finishCompare(key, alreadySet) {
+  const st = _compareState[key];
+  const t = COMPARE_TARGETS[key];
+  const panel = document.getElementById(t.panelId);
+  if (!st) return;
+  let score;
+  if (alreadySet) {
+    score = parseFloat(document.getElementById(t.sliderId).value);
+  } else {
+    const below = st.pool[st.lo - 1];
+    const above = st.pool[st.lo];
+    if (below && above) score = Math.round(((below.score + above.score) / 2) * 2) / 2;
+    else if (above) score = Math.max(0, above.score - 0.5);
+    else if (below) score = Math.min(10, below.score + 0.5);
+    else score = Math.round(((st.bucket.lo + st.bucket.hi) / 2) * 2) / 2;
+    setSlider(t.sliderId, t.valId, score);
+  }
+  if (t.saveBtnId) document.getElementById(t.saveBtnId).disabled = false;
+  panel.innerHTML = `<div class="compare-result">Placed it at ${fmt(score)}/10 based on how it compared. Feel free to nudge the slider above if it's not quite right.</div>
+    <div class="compare-panel-footer"><span></span><button class="compare-cancel-btn" onclick="cancelCompare('${key}')">Done</button></div>`;
+  delete _compareState[key];
+}
+
 // ── Community average: if other users have rated the exact same track, show
 // it as ambient context while you're picking your own score.
 function communityStatsForTrack(spotifyId, excludeUsername) {
@@ -3033,6 +3220,7 @@ function showFetchedCard(item) {
   const initVal = existing ? existing.score : 5;
   setSlider('ratingSlider', 'sliderVal', initVal);
   document.getElementById('fetchNotes').value = existing ? (existing.notes || '') : '';
+  cancelCompare('fetch');
 
   // If no existing rating, keep save btn disabled until user picks a tier
   const saveBtn = document.getElementById('rateSaveBtn');
@@ -4379,6 +4567,7 @@ function openEditModal(item) {
   document.getElementById('modalSub').textContent = item.artist + (item.year ? ' — ' + item.year : '');
   setSlider('modalRatingSlider', 'modalSliderVal', item.score);
   document.getElementById('modalNotes').value = item.notes || '';
+  cancelCompare('modal');
   document.getElementById('modalOverlay').classList.add('open');
 }
 
@@ -4750,6 +4939,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         </div>
       </div>
     </div>
+    <button class="compare-toggle" id="modalCompareToggle" onclick="toggleComparePanel('modal')">Not sure? Rate it by comparing →</button>
+    <div class="compare-panel" id="modalComparePanel"></div>
     <button class="modal-save-btn" onclick="saveModalRating()">Update Rating</button>
     <div class="modal-notes-label">Notes (optional)</div>
     <textarea class="modal-notes" id="modalNotes" placeholder="What do you love about this track?…" rows="2"></textarea>
