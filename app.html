@@ -236,8 +236,7 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
   transition:all .15s;font-family:'DM Sans',sans-serif}
 .btn-rate-save:hover{background:var(--accent);color:#1a1408;border-color:var(--accent)}
 .btn-rate-save:disabled{opacity:.3;cursor:not-allowed}
-.rating-guide{margin:.6rem 0 .75rem;min-height:1.6rem}
-.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1.05rem;font-weight:600;letter-spacing:.01em;color:var(--muted)}
+
 
 /* ── Rating-health banner (stats tab) ── */
 .rating-health{margin:0 0 1.6rem;padding:.9rem 1.1rem;border-radius:11px;
@@ -913,8 +912,8 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
   animation:perfectPulse 3.8s ease-in-out infinite;
 }
 @keyframes perfectPulse{
-  0%,100%{filter:drop-shadow(0 0 2px rgba(163,60,236,.5)) drop-shadow(0 0 5px rgba(163,60,236,.2))}
-  50%{filter:drop-shadow(0 0 6px rgba(163,60,236,1)) drop-shadow(0 0 14px rgba(163,60,236,.55)) drop-shadow(0 0 24px rgba(163,60,236,.25))}
+  0%,100%{filter:drop-shadow(0 0 2px rgba(32,233,66,.5)) drop-shadow(0 0 5px rgba(32,233,66,.2))}
+  50%{filter:drop-shadow(0 0 6px rgba(32,233,66,1)) drop-shadow(0 0 14px rgba(32,233,66,.55)) drop-shadow(0 0 24px rgba(32,233,66,.25))}
 }
 
 /* ── Score ring draw-on ── */
@@ -1543,7 +1542,6 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
                 </div>
               </div>
             </div>
-            <div class="rating-guide" id="fetchRatingGuide"></div>
             <button class="btn-rate-save" id="rateSaveBtn" onclick="saveFetchedRating()" disabled>Save Rating</button>
             <div class="modal-notes-label" style="margin-top:.6rem">Notes (optional)</div>
             <textarea class="modal-notes" id="fetchNotes" placeholder="What do you love about this track?…" rows="2"></textarea>
@@ -2390,13 +2388,6 @@ function scoreToTier(score) {
   return { key: fmt(s), value: s, color: scoreColor(s), label: g.label };
 }
 
-function updateRatingGuide(score, elId) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  const s = Number(score);
-  const g = getRatingGuide(s);
-  el.innerHTML = `<span class="guide-label">${g.label}</span>`;
-}
 
 // Build SVG ring HTML for a score
 function ringHTML(score) {
@@ -2422,8 +2413,8 @@ function ringHTML(score) {
     </div>`;
 }
 
-// Slider fill + big number + guide, all driven off the current value
-function onSliderInput(slider, valId, saveBtnId, guideId) {
+// Slider fill + big number, driven off the current value
+function onSliderInput(slider, valId, saveBtnId) {
   const v = parseFloat(slider.value);
   const col = scoreColor(v);
   slider.style.setProperty('--pct', (v / 10 * 100) + '%');
@@ -2435,7 +2426,6 @@ function onSliderInput(slider, valId, saveBtnId, guideId) {
     const btn = document.getElementById(saveBtnId);
     if (btn) btn.disabled = false;
   }
-  updateRatingGuide(v, guideId || (valId === 'modalSliderVal' ? 'modalRatingGuide' : 'fetchRatingGuide'));
 }
 
 // Nudge the active rating slider by ±delta, clamped to 0–10, and re-run all the
@@ -4723,7 +4713,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         </div>
       </div>
     </div>
-    <div class="rating-guide" id="modalRatingGuide"></div>
     <button class="modal-save-btn" onclick="saveModalRating()">Update Rating</button>
     <div class="modal-notes-label">Notes (optional)</div>
     <textarea class="modal-notes" id="modalNotes" placeholder="What do you love about this track?…" rows="2"></textarea>
