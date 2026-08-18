@@ -237,6 +237,9 @@ html.light-mode select{background:var(--surface2);color:var(--text)}
 .btn-rate-save:hover{background:var(--accent);color:#1a1408;border-color:var(--accent)}
 .btn-rate-save:disabled{opacity:.3;cursor:not-allowed}
 
+.rating-guide{margin:.6rem 0 .1rem;min-height:1.6rem}
+.rating-guide .guide-label{font-family:'Fredoka',sans-serif;font-size:1.05rem;font-weight:600;letter-spacing:.01em;color:var(--muted)}
+
 
 /* ── Rating-health banner (stats tab) ── */
 .rating-health{margin:0 0 1.6rem;padding:.9rem 1.1rem;border-radius:11px;
@@ -760,6 +763,8 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .album-track-inline-slider.open{display:flex}
 .album-track-inline-guide{font-size:.68rem;color:var(--muted);min-width:4rem;font-family:'Fredoka',sans-serif;font-weight:600;transition:color .15s}
 .atsl-save-btn{background:var(--accent);border:none;color:#1a1408;border-radius:6px;padding:.25rem .6rem;font-size:.72rem;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.atsl-guide{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);
+  display:inline-block;width:12ch;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .album-track-notes-row{display:none;padding:.2rem .35rem .45rem 1.1rem}
 .album-track-notes-row.open{display:block}
 .album-track-notes-input{display:block;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;
@@ -1542,6 +1547,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
                 </div>
               </div>
             </div>
+            <div class="rating-guide" id="fetchRatingGuide"></div>
             <button class="btn-rate-save" id="rateSaveBtn" onclick="saveFetchedRating()" disabled>Save Rating</button>
             <div class="modal-notes-label" style="margin-top:.6rem">Notes (optional)</div>
             <textarea class="modal-notes" id="fetchNotes" placeholder="What do you love about this track?…" rows="2"></textarea>
@@ -2328,6 +2334,35 @@ function animateCount(el, target, duration, isFloat) {
 
 const TIER_MIN = 0, TIER_MAX = 10, TIER_STEP = 0.5;
 
+// Each entry anchors ONE everyday word to a whole number on the 0–10 scale.
+// A .5 score shares its base integer's word (9 and 9.5 are both "Masterful").
+const RATING_GUIDES = [
+  { value:0,   label:'Unlistenable' },
+  { value:1,   label:'Terrible' },
+  { value:2,   label:'Very Bad' },
+  { value:3,   label:'Bad' },
+  { value:4,   label:'Subpar' },
+  { value:5,   label:'Average' },
+  { value:6,   label:'Decent' },
+  { value:7,   label:'Good' },
+  { value:8,   label:'Great' },
+  { value:9,   label:'Masterful' },
+  { value:10,  label:'Perfect' },
+];
+
+function getRatingGuide(score) {
+  const s = Number(score);
+  const base = Math.min(10, Math.max(0, Math.floor(s)));
+  return RATING_GUIDES[base];
+}
+
+function updateRatingGuide(score, elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const g = getRatingGuide(score);
+  el.innerHTML = `<span class="guide-label">${g.label}</span>`;
+}
+
 // A true rainbow across the full range — hue sweeps red → orange → yellow → green → blue → violet.
 // The ramp isn't linear: low/mid scores move slowly through red-orange-yellow (so a 5 reads as
 // "yellow," not "green"), then accelerates through green/blue/violet for the top of the scale.
@@ -2349,7 +2384,8 @@ function scoreColor(score) {
 // both reflect the exact score.
 function scoreToTier(score) {
   const s = Number(score);
-  return { key: fmt(s), value: s, color: scoreColor(s) };
+  const g = getRatingGuide(s);
+  return { key: fmt(s), value: s, color: scoreColor(s), label: g.label };
 }
 
 
@@ -2378,7 +2414,7 @@ function ringHTML(score) {
 }
 
 // Slider fill + big number, driven off the current value
-function onSliderInput(slider, valId, saveBtnId) {
+function onSliderInput(slider, valId, saveBtnId, guideId) {
   const v = parseFloat(slider.value);
   const col = scoreColor(v);
   slider.style.setProperty('--pct', (v / 10 * 100) + '%');
@@ -2390,6 +2426,7 @@ function onSliderInput(slider, valId, saveBtnId) {
     const btn = document.getElementById(saveBtnId);
     if (btn) btn.disabled = false;
   }
+  updateRatingGuide(v, guideId || (valId === 'modalSliderVal' ? 'modalRatingGuide' : 'fetchRatingGuide'));
 }
 
 // Nudge the active rating slider by ±delta, clamped to 0–10, and re-run all the
@@ -2466,6 +2503,7 @@ function _trackInlineRatingHTML(ai, ti, score, saveOnclick) {
             id="ats-${ai}-${ti}" style="--fill-color:${col};--pct:${score/10*100}%"
             oninput="onAlbumTrackSlider(this,${ai},${ti})">
           <span class="album-track-inline-val" id="atsv-${ai}-${ti}" style="color:${col}">${fmt(score)}</span>
+          <span class="atsl-guide" id="atsg-${ai}-${ti}">${getRatingGuide(score).label}</span>
           <button class="atsl-save-btn" onclick="${saveOnclick}">Save</button>
         </div>`;
 }
@@ -2478,6 +2516,8 @@ function onAlbumTrackSlider(input, ai, ti) {
   input.style.setProperty('--fill-color', col);
   const valEl = document.getElementById(`atsv-${ai}-${ti}`);
   if (valEl) { valEl.textContent = fmt(v); valEl.style.color = col; }
+  const guideEl = document.getElementById(`atsg-${ai}-${ti}`);
+  if (guideEl) { guideEl.textContent = getRatingGuide(v).label; }
 }
 
 let ratings = []; // loaded from Supabase after login
@@ -4677,6 +4717,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         </div>
       </div>
     </div>
+    <div class="rating-guide" id="modalRatingGuide"></div>
     <button class="modal-save-btn" onclick="saveModalRating()">Update Rating</button>
     <div class="modal-notes-label">Notes (optional)</div>
     <textarea class="modal-notes" id="modalNotes" placeholder="What do you love about this track?…" rows="2"></textarea>
