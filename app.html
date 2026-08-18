@@ -763,6 +763,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .album-track-inline-slider.open{display:flex}
 .album-track-inline-guide{font-size:.68rem;color:var(--muted);min-width:4rem;font-family:'Fredoka',sans-serif;font-weight:600;transition:color .15s}
 .atsl-save-btn{background:var(--accent);border:none;color:#1a1408;border-radius:6px;padding:.25rem .6rem;font-size:.72rem;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.atsl-guide{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--muted);white-space:nowrap}
 .album-track-notes-row{display:none;padding:.2rem .35rem .45rem 1.1rem}
 .album-track-notes-row.open{display:block}
 .album-track-notes-input{display:block;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;
@@ -2505,6 +2506,7 @@ function _trackInlineRatingHTML(ai, ti, score, saveOnclick) {
             id="ats-${ai}-${ti}" style="--fill-color:${col};--pct:${score/10*100}%"
             oninput="onAlbumTrackSlider(this,${ai},${ti})">
           <span class="album-track-inline-val" id="atsv-${ai}-${ti}" style="color:${col}">${fmt(score)}</span>
+          <span class="atsl-guide" id="atsg-${ai}-${ti}">${getRatingGuide(score).label}</span>
           <button class="atsl-save-btn" onclick="${saveOnclick}">Save</button>
         </div>`;
 }
@@ -2517,6 +2519,8 @@ function onAlbumTrackSlider(input, ai, ti) {
   input.style.setProperty('--fill-color', col);
   const valEl = document.getElementById(`atsv-${ai}-${ti}`);
   if (valEl) { valEl.textContent = fmt(v); valEl.style.color = col; }
+  const guideEl = document.getElementById(`atsg-${ai}-${ti}`);
+  if (guideEl) { guideEl.textContent = getRatingGuide(v).label; }
 }
 
 let ratings = []; // loaded from Supabase after login
